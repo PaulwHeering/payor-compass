@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase-admin'
 
 function loginError(request: NextRequest, message: string) {
   return NextResponse.redirect(
@@ -82,15 +83,25 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const { error: upsertError } = await supabase.from('user_profiles').upsert({
-    id: user.id,
-    email: user.email ?? '',
-    job_title: jobTitle,
-    role: allowed.role,
-    entra_id: user.id,
-  })
+  // The role is written with the server-side key so users can never set their own.
+  // Fail closed: if the profile can't be saved, don't leave them signed in without a role.
+  let upsertError: unknown = null
+  try {
+    const { error } = await createAdminClient().from('user_profiles').upsert({
+      id: user.id,
+      email: user.email ?? '',
+      job_title: jobTitle,
+      role: allowed.role,
+      entra_id: user.id,
+    })
+    upsertError = error
+  } catch (e) {
+    upsertError = e
+  }
   if (upsertError) {
     console.error('Error upserting user profile:', upsertError)
+    await supabase.auth.signOut()
+    return loginError(request, 'Sign-in could not be completed. Please contact an administrator.')
   }
 
   return NextResponse.redirect(new URL('/', request.url))
