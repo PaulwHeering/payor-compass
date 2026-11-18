@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from './providers'
 
 interface Payer {
   id: string
@@ -29,6 +31,8 @@ interface CompletionBySection {
 }
 
 export default function Home() {
+  const router = useRouter()
+  const { user, signOut } = useAuth()
   const [payers, setPayers] = useState<Payer[]>([])
   const [sections, setSections] = useState<Section[]>([])
   const [fields, setFields] = useState<Field[]>([])
@@ -37,6 +41,12 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<string | null>(null)
   const [sortAsc, setSortAsc] = useState(true)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  const handleLogout = async () => {
+    await signOut()
+    router.push('/auth/login')
+  }
 
   let filteredPayers = payers.filter(payer =>
     payer.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -171,12 +181,42 @@ export default function Home() {
               <h1 className="text-4xl font-bold text-slate-900 mb-2">Payer Compass</h1>
               <p className="text-slate-600">Manage and track insurance payer information</p>
             </div>
-            <Link
-              href="/payer/new"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
-            >
-              + New Payer
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/payer/new"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
+              >
+                + New Payer
+              </Link>
+              {user && (
+                <div className="relative">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                      {user.email?.[0].toUpperCase() || 'U'}
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 max-w-[120px] truncate">
+                      {user.email?.split('@')[0]}
+                    </span>
+                  </button>
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
+                      <div className="p-3 border-b border-slate-200">
+                        <p className="text-sm font-medium text-slate-900">{user.email}</p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Search */}
