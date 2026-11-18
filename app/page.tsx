@@ -42,6 +42,22 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<string | null>(null)
   const [sortAsc, setSortAsc] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+
+    const getUserRole = async () => {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      setUserRole(data?.role || null)
+    }
+
+    getUserRole()
+  }, [user])
 
   const handleLogout = async () => {
     await signOut()
@@ -205,7 +221,20 @@ export default function Home() {
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
                       <div className="p-3 border-b border-slate-200">
                         <p className="text-sm font-medium text-slate-900">{user.email}</p>
+                        {userRole && (
+                          <p className="text-xs text-slate-500 mt-1">Role: {userRole}</p>
+                        )}
                       </div>
+                      {userRole === 'admin' && (
+                        <>
+                          <Link
+                            href="/admin/job-titles"
+                            className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 border-b border-slate-200"
+                          >
+                            Manage Job Titles
+                          </Link>
+                        </>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
