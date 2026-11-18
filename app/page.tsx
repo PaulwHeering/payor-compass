@@ -43,6 +43,16 @@ export default function Home() {
   const [sortAsc, setSortAsc] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [pendingFindings, setPendingFindings] = useState(0)
+
+  useEffect(() => {
+    if (userRole !== 'manager' && userRole !== 'admin') return
+    supabase
+      .from('findings')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .then(({ count }) => setPendingFindings(count ?? 0))
+  }, [userRole])
 
   useEffect(() => {
     if (!user) return
@@ -198,6 +208,19 @@ export default function Home() {
               <p className="text-slate-600">Manage and track insurance payer information</p>
             </div>
             <div className="flex items-center gap-4">
+              {(userRole === 'manager' || userRole === 'admin') && (
+                <Link
+                  href="/review"
+                  className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Review findings
+                  {pendingFindings > 0 && (
+                    <span className="ml-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      {pendingFindings}
+                    </span>
+                  )}
+                </Link>
+              )}
               <Link
                 href="/payer/new"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
