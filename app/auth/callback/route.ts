@@ -4,6 +4,15 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const error = requestUrl.searchParams.get('error')
+  const errorDescription = requestUrl.searchParams.get('error_description')
+
+  // Handle OAuth errors from Entra
+  if (error) {
+    return NextResponse.redirect(
+      new URL(`/auth/login?error=${encodeURIComponent(errorDescription || error)}`, request.url)
+    )
+  }
 
   if (code) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

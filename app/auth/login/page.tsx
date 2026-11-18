@@ -27,8 +27,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
-          redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
-          scopes: 'openid profile email',
+          redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/`,
         },
       })
       if (error) throw error
