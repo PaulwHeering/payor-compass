@@ -20,6 +20,8 @@ interface Finding {
   reviewed_at: string | null
   reviewer_notes: string | null
   agent_note: string | null
+  quote_verified: boolean | null
+  verification_note: string | null
   created_at: string
   retrieved_at: string
   payers: { name: string } | null
@@ -233,8 +235,21 @@ function FindingCard({
               · retrieved {new Date(finding.retrieved_at).toLocaleDateString()}
             </span>
           </p>
+          {finding.quote_verified === true && (
+            <p className="text-sm text-green-700 mb-1">
+              ✓ The server found this quote in the downloaded document.
+              {finding.verification_note && ` ${finding.verification_note}`}
+            </p>
+          )}
+          {finding.quote_verified === false && (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-1">
+              Not verified automatically. {finding.verification_note}
+            </p>
+          )}
           <p className="text-xs text-slate-500 mb-4">
-            Check that the quote is really in the document and that it applies to the right plan, state and year.
+            {finding.quote_verified === true
+              ? 'The quote is real. Still check that it applies to the right plan, state and year.'
+              : 'Check that the quote is really in the document and that it applies to the right plan, state and year.'}
           </p>
         </>
       )}
@@ -369,7 +384,12 @@ export default function ReviewPage() {
           </Link>
           <h1 className="text-3xl font-bold text-slate-900 mt-2">Review research findings</h1>
           <p className="text-slate-600">
-            Claude proposes values with a source and quote. Nothing goes live until you approve it.
+            Claude proposes values with a source and quote. Nothing goes live until you approve it.{' '}
+            {(role === 'manager' || role === 'admin') && (
+              <Link href="/research" className="text-blue-600 hover:text-blue-700 underline">
+                Start new research
+              </Link>
+            )}
           </p>
           {role && !canReview && (
             <p className="mt-3 text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-3">

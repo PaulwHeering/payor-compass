@@ -210,6 +210,14 @@ export default function Home() {
             <div className="flex items-center gap-4">
               {(userRole === 'manager' || userRole === 'admin') && (
                 <Link
+                  href="/research"
+                  className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Research
+                </Link>
+              )}
+              {(userRole === 'manager' || userRole === 'admin') && (
+                <Link
                   href="/review"
                   className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
                 >

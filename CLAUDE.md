@@ -28,5 +28,8 @@ know about each insurance payer: contracts, authorizations, credentialing, billi
 7. **Never use, ask for, or print the Supabase service key.**
 8. Don't put member information (PHI), passwords or signed contract text into findings or the playbooks.
 
-To research a payer, use the `research-payer` skill. Setup and usage for coworkers are in
+To research a payer from a Claude Code session, use the `research-payer` skill. Coworkers normally use the
+web app instead (`/research` and `/review`); the server-side research engine is in `lib/research/`, and its
+rules (Claude can only search, read and submit; the server verifies quotes; findings are saved as the
+signed-in user) must stay in step with these. Setup and usage for coworkers are in
 `docs/research-setup-guide.md`.

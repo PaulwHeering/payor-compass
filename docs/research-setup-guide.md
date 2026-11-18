@@ -1,174 +1,97 @@
 # Payor Compass: Research Guide
 
-For coworkers who will research payers with Claude and fill in the Payor Compass database.
-
-- **Part 1** gets you set up (one time, about 30 minutes).
-- **Part 2** is how you use it day to day.
+For coworkers who research payers and fill in the Payor Compass database. You do everything in the web app.
 
 ## How it works
 
-1. You add a payer in the Payor Compass app.
-2. You ask Claude to research it.
-3. Claude saves **proposed values** (called *findings*) to a staging area. Each one has a source link and the exact quote that supports it. **Nothing goes into the live data yet.**
-4. You review each finding and approve or reject it. Approving copies it into the live payer data and logs who approved it.
-5. Claude records how it found each answer (the *playbook*), so it can find the same thing faster for the next payer and re-check it later.
+1. You pick a payer and the fields to research on the **Research** page.
+2. Claude searches the web and reads the payer's documents. For each field it proposes a value with a source link and an exact quote.
+3. **The server downloads each source and checks that the quote is really in it.** Quotes that can't be found are rejected before you ever see them.
+4. You review each finding on the **Review findings** page and approve or reject it. Approving publishes it to the live data and records who approved it.
+5. Rejection reasons are kept and shown to Claude the next time it researches that field.
 
-## What works today
-
-| Step | Status |
-|---|---|
-| Staging tables and the approval function | Done |
-| Access limited to managers and admins | Done |
-| Claude researching and saving findings | Needs the research instructions file (`CLAUDE.md`), in progress |
-| Approving findings | **Needs the review page, not built yet.** Until then, findings can be saved but not approved |
-| Daily re-checking of sources | Planned |
+**Nothing goes live until you approve it.**
 
 ---
 
-# Part 1: Getting set up
+# Part 1: Getting set up (for coworkers)
 
-## Before you start, make sure you have
+There is nothing to install.
 
-- Access to the GitHub repository `PaulwHeering/payor-compass`. Ask the project owner to add you as a collaborator.
-- Access to the **Payor Compass** project in Supabase (not any other Supabase project).
-- The Claude desktop app, with the Code tab.
-- A job title in the app's job titles list with the **manager** or **admin** role. Without it you can browse but not edit or approve. The project owner manages this at `/admin/job-titles` in the app.
+1. Open the Payor Compass site and sign in with your Microsoft work account.
+2. You need a **manager** or **admin** role to start research and approve findings. Your role comes from your job title. If you can't see the **Research** and **Review findings** buttons on the home page, ask the project owner to add your job title (at `/admin/job-titles`).
 
-## Steps
-
-### 1. Install the tools
-
-Open Terminal and run these one at a time. If a command says `command not found: brew`, install Homebrew first from https://brew.sh.
-
-```bash
-brew install git node supabase/tap/supabase
-```
-
-Don't use `sudo` and don't use `npm install -g`. If something asks for an administrator password, stop and ask the project owner.
-
-### 2. Get the project onto your computer
-
-```bash
-cd ~/Desktop
-git clone https://github.com/PaulwHeering/payor-compass.git
-cd payor-compass
-npm install
-```
-
-### 3. Add the environment file
-
-The app needs a `.env.local` file in the project's top folder with two lines:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-```
-
-Ask the project owner to send you these values securely (not in email or open chat). **You do not need, and should never be given, the Supabase service key.** If anyone offers it, decline.
-
-### 4. Connect the Supabase command line to Payor Compass
-
-```bash
-supabase login
-```
-
-This opens a browser to sign in. Then link the project:
-
-```bash
-supabase link --project-ref dsuzduetrcscspthnzdf
-```
-
-Check that it is the right project:
-
-```bash
-supabase projects list
-```
-
-The linked project must be named **Payor Compass**. If you see a data warehouse or any other name, stop and ask.
-
-### 5. Open the project in Claude Code
-
-In the Claude desktop app, go to the Code tab, start a new session, and choose the `payor-compass` folder. Claude can now read the project instructions and use the database connection.
-
-### 6. Check that it works
-
-Ask Claude:
-
-> List the payers currently in the Payor Compass database. Don't change anything.
-
-You should get a list of payers, or an empty list if none exist yet. If you get a permissions or "project not found" error, repeat step 4 and tell the project owner.
-
-You're set up.
+That's all.
 
 ---
 
 # Part 2: Using it
 
-## Each research task
+## Research a payer
 
-### 1. Add the payer
+1. Make sure the payer exists. If not, add it with **+ New Payer**.
+2. Click **Research** on the home page.
+3. Choose the payer. Tick the fields you want, or tick a whole section.
+   - Start small: pick 3 to 5 fields the first time so you can see how it works.
+   - You can choose up to 25 fields at a time.
+4. Click **Research N fields**.
+5. **Keep the page open while it runs.** Each field takes a minute or two. You'll see each one go from Waiting to Researching to Done. If you close the page, the remaining fields wait, and they continue when you open the Research page again.
 
-In the Payor Compass app, add the payer from the home page. This creates the payer record Claude will attach its findings to.
+If a field fails, click **Retry**. If you started the wrong thing, click **Stop waiting fields**.
 
-### 2. Start a Claude Code session in the project folder
+## Review the findings
 
-Open the Code tab and start a new session in `payor-compass`. Start a fresh session for each payer. It keeps the work clean.
+Click **Review findings** (the number shows how many are waiting). For each finding, check:
 
-### 3. Ask for the research
+- **The quote is shown with a green ✓** when the server found it in the document. If you see an amber "Not verified automatically", the server couldn't download or read the document (some sites block automated downloads). Open the link and check the quote by hand.
+- **The scope is right.** Payers publish different rules by state, line of business (commercial, Medicaid, Medicare Advantage), plan and year. Claude's note says what it believes the source covers. Check it fits your contract.
+- **A blue "Changes a live value" badge** means approving will replace what is published. The current value is shown above the proposal.
 
-Name the **payer** and the **fields**. Field names match the labels in the app, grouped under Profile, Links, Staff & Coding, Authorizations, Clinical Services, Credentialing and Billing.
+Then:
 
-> Research Aetna. Fields: timely filing limit, prior authorization submission process, telehealth allowance.
+- **Approve and publish** if it's right. You can edit the value first.
+- **Reject** with a reason. Good reasons teach Claude ("this is the 2022 manual", "this is for Medicaid, not commercial").
+- **Needs more info** if you want it looked at again.
 
-You can also ask for a whole section: "Research Aetna's Billing section."
+"Not found" findings mean Claude looked and couldn't find a reliable source. That's a valid answer, and the note shows where it looked.
 
-Claude will:
-- check its playbook notes for those fields first
-- research from primary sources (the payer's provider manual, clinical policy and portal) before anything else
-- save each answer as a pending finding with the source link and the exact supporting quote
-- say plainly when it **can't find** something instead of guessing
+## Rules of thumb
 
-### 4. Review each finding
-
-For every finding:
-- Open the link and check the quote is really there.
-- Check it is the right plan, right state and current year. Payers publish different rules for Medicaid and commercial plans, and old manuals stay online.
-- **Approve** if the value is right.
-- **Reject** with a short reason, such as "this is the 2022 manual" or "this is the Medicaid plan, not commercial". Rejection reasons are the most useful thing you can give Claude, because they go into the playbook.
-- Mark **needs info** to have Claude dig further.
-
-> **Not available yet:** approving needs the review page. Until it is built, ask Claude to show you the pending findings so you can check them, but they can't be approved.
-
-### 5. Teach Claude (update the playbook)
-
-After a review, say:
-
-> Update the playbook from this review.
-
-Claude will propose notes such as where the answer was found and what to avoid. Read them and approve the ones that are right. Next time Claude researches that field, for any payer, it starts from those notes.
-
-### 6. Repeat for the next payer
-
-Start a new session and repeat. The playbook makes each payer faster than the last.
-
-## Daily checking (planned)
-
-Once there is approved data, a scheduled check will revisit each source. If a page changed, Claude will extract the value again and add a new pending finding marked as a change. **Nothing is overwritten automatically.** You approve changes the same way as new findings.
+- Every value needs a source and a quote. The server won't save a quote it can't find in the document.
+- Claude's value is a proposal. Check it against the source.
+- If something looks wrong, reject it. A rejection costs nothing. A bad approved value does.
+- Don't try to get Claude to research member information, or paste passwords or signed contracts into the app.
 
 ## If something goes wrong
 
 | What you see | What to do |
 |---|---|
-| Claude says it can't connect to the database | Repeat Part 1 step 4. Check `supabase projects list` shows Payor Compass |
-| "Only managers and admins can approve findings" | Your job title isn't a manager or admin role. Ask the project owner |
-| Claude saved a value with no source or quote | It shouldn't be able to. Reject it and tell the project owner |
-| The app says "Sign-in could not be completed" | Tell the project owner. It is a server problem, not something you did |
-| Anything unexpected | Stop and ask. Nothing in staging is live, so waiting costs nothing |
+| No Research or Review buttons | Your role isn't manager or admin. Ask the project owner |
+| "Research is not set up yet" | The Claude API key is missing on the server. Tell the project owner |
+| A field shows Failed with a rate-limit message | Wait a minute and click Retry |
+| "Not verified automatically" on a finding | Open the link and check the quote by hand, or reject it |
+| Anything unexpected | Stop and ask. Nothing is live until approved |
 
-## Rules of thumb
+---
 
-- Every value needs a source and a quote. No source, no finding.
-- Prefer payer documents over third-party websites.
-- Never paste passwords, member information or signed contracts into a session unless the project owner has confirmed it is allowed.
-- Never ask Claude to write directly to the live payer data. Everything goes through staging and review.
-- If something looks wrong, reject it. A rejection costs nothing. A bad approved value does.
+# For the project owner
+
+## One-time setup
+
+1. **Apply the database migration** (`supabase db push --remote`), then deploy.
+2. **Create a Claude API key** in the Anthropic console. Set a **monthly spend limit** on it first.
+3. **Add it to Vercel** as `ANTHROPIC_API_KEY` for Production (Settings, then Environment Variables). Add it in the dashboard. Don't paste it in chat or a command. Redeploy so it takes effect.
+4. Optional: set `RESEARCH_MODEL` to change the model. It defaults to `claude-opus-5-5`, the most careful. A cheaper model such as `claude-sonnet-5-5` costs less and may be fine for simple fields.
+5. Add `ANTHROPIC_API_KEY` to `.env.local` too if you want to test research locally.
+
+## Good to know
+
+- **Cost.** Each field is one research session with web search. Cost depends on the model and how hard the field is. Watch the first runs in the Anthropic console, then set the spend limit.
+- **Safety.** Claude can only search, read pages and submit a finding. It can't touch the database. The server saves findings as the signed-in user, so database rules still apply. Source links are checked so they can't reach internal addresses.
+- **Research needs a manager or admin.** Findings are saved in the same staging tables the review page reads.
+- **Time limit.** Each field runs in its own request of up to 5 minutes. Fields that run out of time can be retried.
+- **Daily re-checking** of sources isn't built yet.
+
+## Advanced: researching from Claude Code
+
+The `research-payer` skill in `.claude/skills` does the same research from a terminal session, and is useful for testing new fields and changing the research instructions. It needs the Supabase CLI linked to the Payor Compass project. See `CLAUDE.md` for its rules.
