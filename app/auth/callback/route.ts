@@ -1,90 +1,96 @@
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
-  const requestUrl = new URL(request.url)
-  const code = requestUrl.searchParams.get('code')
-  const error = requestUrl.searchParams.get('error')
-  const errorDescription = requestUrl.searchParams.get('error_description')
+function loginError(request: NextRequest, message: string) {
+  return NextResponse.redirect(
+    new URL(`/auth/login?error=${encodeURIComponent(message)}`, request.url)
+  )
+}
 
-  // Handle OAuth errors from Entra
-  if (error) {
-    return NextResponse.redirect(
-      new URL(`/auth/login?error=${encodeURIComponent(errorDescription || error)}`, request.url)
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const code = searchParams.get('code')
+  const oauthError = searchParams.get('error_description') || searchParams.get('error')
+
+  if (oauthError) {
+    console.error('OAuth error from Entra:', oauthError)
+    return loginError(request, oauthError)
+  }
+
+  if (!code) {
+    return loginError(request, 'No authorization code received')
+  }
+
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+
+  if (exchangeError || !data.session) {
+    console.error('Code exchange failed:', exchangeError?.message)
+    return loginError(request, exchangeError?.message || 'Sign-in failed')
+  }
+
+  const { user, provider_token: providerToken } = data.session
+
+  // Graph needs the Microsoft token, not the Supabase JWT
+  let jobTitle: string | null = null
+  if (providerToken) {
+    const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me?$select=jobTitle', {
+      headers: { Authorization: `Bearer ${providerToken}` },
+    })
+    if (graphResponse.ok) {
+      jobTitle = (await graphResponse.json()).jobTitle ?? null
+    } else {
+      console.error('Microsoft Graph error:', graphResponse.status, await graphResponse.text())
+    }
+  } else {
+    console.error('No provider_token on session')
+  }
+
+  const { data: allowed } = jobTitle
+    ? await supabase
+        .from('job_titles')
+        .select('role')
+        .eq('enabled', true)
+        .eq('title', jobTitle)
+        .maybeSingle()
+    : { data: null }
+
+  if (!allowed) {
+    console.warn('Unauthorized job title:', jobTitle, 'for', user.email)
+    await supabase.auth.signOut()
+    return loginError(
+      request,
+      `Your job title (${jobTitle ?? 'unknown'}) is not authorized to access this application`
     )
   }
 
-  if (code) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.redirect(
-        new URL('/auth/login?error=missing_env', request.url)
-      )
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-    // Exchange code for session
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (error) {
-      return NextResponse.redirect(
-        new URL(`/auth/login?error=${encodeURIComponent(error.message)}`, request.url)
-      )
-    }
-
-    if (data.session?.user) {
-      const user = data.session.user
-      const email = user.email || ''
-      const accessToken = data.session.access_token
-
-      // Fetch user profile from Microsoft Graph to get job title
-      let jobTitle: string | null = null
-      try {
-        const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        })
-
-        if (graphResponse.ok) {
-          const graphUser = await graphResponse.json()
-          jobTitle = graphUser.jobTitle || null
-        }
-      } catch (err) {
-        console.error('Error fetching from Microsoft Graph:', err)
-      }
-
-      // Check if user's job title is allowed
-      const { data: allowedJobTitles } = await supabase
-        .from('job_titles')
-        .select('title, role')
-        .eq('enabled', true)
-        .eq('title', jobTitle)
-
-      if (!allowedJobTitles || allowedJobTitles.length === 0) {
-        // Job title not found or not enabled - deny access
-        await supabase.auth.signOut()
-        return NextResponse.redirect(
-          new URL(
-            `/auth/login?error=${encodeURIComponent('Your job title is not authorized to access this application')}`,
-            request.url
-          )
-        )
-      }
-
-      // Create or update user profile
-      const userRole = allowedJobTitles[0].role
-      await supabase.from('user_profiles').upsert({
-        id: user.id,
-        email,
-        job_title: jobTitle,
-        role: userRole,
-        entra_id: user.id,
-      })
-    }
+  const { error: upsertError } = await supabase.from('user_profiles').upsert({
+    id: user.id,
+    email: user.email ?? '',
+    job_title: jobTitle,
+    role: allowed.role,
+    entra_id: user.id,
+  })
+  if (upsertError) {
+    console.error('Error upserting user profile:', upsertError)
   }
 
   return NextResponse.redirect(new URL('/', request.url))

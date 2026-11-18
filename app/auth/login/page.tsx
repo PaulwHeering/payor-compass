@@ -10,6 +10,9 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    const urlError = new URLSearchParams(window.location.search).get('error')
+    if (urlError) setError(urlError)
+
     // Check if already logged in
     const checkUser = async () => {
       const { data } = await supabase.auth.getSession()
@@ -27,7 +30,8 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
-          redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/`,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'openid profile email User.Read',
         },
       })
       if (error) throw error
