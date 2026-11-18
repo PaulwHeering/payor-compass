@@ -9,6 +9,7 @@ const MODEL = process.env.RESEARCH_MODEL || 'claude-opus-5-5'
 const MAX_TURNS = 14
 const MAX_WEB_SEARCHES = 8
 const MAX_WEB_FETCHES = 8
+const PAGE_CHUNK = 30000
 const MAX_QUOTE_FAILURES = 3
 const MAX_ATTEMPTS = 3
 const STALE_RUNNING_MS = 6 * 60 * 1000
@@ -57,8 +58,23 @@ How to work:
 - When you are done, stop. Do not write a long summary.`
 
 const TOOLS: Anthropic.Beta.BetaToolUnion[] = [
-  { type: 'web_search_20260209', name: 'web_search', max_uses: MAX_WEB_SEARCHES },
-  { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: MAX_WEB_FETCHES, max_content_tokens: 50000 },
+  // Basic search only: the newer versions need code execution, which HIPAA-configured organizations can't use.
+  { type: 'web_search_20250305', name: 'web_search', max_uses: MAX_WEB_SEARCHES },
+  {
+    name: 'fetch_page',
+    description:
+      'Download a web page or PDF and return its text. Use this to read a document you found in search results. Long documents are returned in pieces: pass start to continue.',
+    strict: true,
+    input_schema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'The http(s) URL to read.' },
+        start: { type: 'integer', description: 'Character offset to start from. Use 0 for the beginning.' },
+      },
+      required: ['url', 'start'],
+      additionalProperties: false,
+    },
+  },
   {
     name: 'submit_finding',
     description:
@@ -294,6 +310,7 @@ export async function runTask(supabase: SupabaseClient, taskId: string): Promise
     let inputTokens = 0
     let outputTokens = 0
     let webSearches = 0
+    let fetches = 0
     let lastText = ''
     const started = Date.now()
 
@@ -340,6 +357,28 @@ export async function runTask(supabase: SupabaseClient, taskId: string): Promise
             reason: str(block.input, 'reason', 2000) ?? '',
           }
           results.push({ type: 'tool_result', tool_use_id: block.id, content: 'Recorded. You can stop now.' })
+          continue
+        }
+
+        if (block.name === 'fetch_page') {
+          const pageUrl = str(block.input, 'url', 2000)
+          const rawStart = (block.input as { start?: unknown }).start
+          const start = typeof rawStart === 'number' && rawStart > 0 ? Math.floor(rawStart) : 0
+          if (!pageUrl) {
+            results.push({ type: 'tool_result', tool_use_id: block.id, content: 'Invalid url.', is_error: true })
+          } else if (++fetches > MAX_WEB_FETCHES) {
+            results.push({ type: 'tool_result', tool_use_id: block.id, content: 'Fetch limit reached. Submit what you have or call report_not_found.', is_error: true })
+          } else {
+            try {
+              const source = await fetchSource(pageUrl)
+              const text = await extractSourceText(source)
+              const piece = text.slice(start, start + PAGE_CHUNK)
+              const more = start + PAGE_CHUNK < text.length ? ` [more: call fetch_page again with start=${start + PAGE_CHUNK}]` : ' [end of document]'
+              results.push({ type: 'tool_result', tool_use_id: block.id, content: (piece || '(no text found)') + more })
+            } catch (error) {
+              results.push({ type: 'tool_result', tool_use_id: block.id, content: `Could not read that URL: ${errorMessage(error)}`, is_error: true })
+            }
+          }
           continue
         }
 
