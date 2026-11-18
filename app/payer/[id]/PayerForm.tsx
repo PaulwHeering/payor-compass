@@ -289,7 +289,6 @@ export default function PayerForm() {
         }
       }
 
-      alert('Payer saved successfully')
       router.push('/')
     } catch (err) {
       console.error('Error saving payer:', err)
