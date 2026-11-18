@@ -229,7 +229,11 @@ export default function ResearchPage() {
           <Link href="/review" className="text-blue-600 underline">
             Review findings
           </Link>
-          . Nothing goes live until you approve it.
+          . Nothing goes live until you approve it.{' '}
+          <Link href="/playbooks" className="text-blue-600 underline">
+            Teach Claude where to look
+          </Link>{' '}
+          for any field.
         </p>
 
         {role && !canRun && (

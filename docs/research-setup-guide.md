@@ -8,7 +8,7 @@ For coworkers who research payers and fill in the Payor Compass database. You do
 2. Claude searches the web and reads the payer's documents. For each field it proposes a value with a source link and an exact quote.
 3. **The server downloads each source and checks that the quote is really in it.** Quotes that can't be found are rejected before you ever see them.
 4. You review each finding on the **Review findings** page and approve or reject it. Approving publishes it to the live data and records who approved it.
-5. Rejection reasons are kept and shown to Claude the next time it researches that field.
+5. Claude remembers. It is shown where approved answers were found before, your rejection reasons, and any instructions your team has written, the next time it researches that field.
 
 **Nothing goes live until you approve it.**
 
@@ -54,6 +54,20 @@ Then:
 - **Needs more info** if you want it looked at again.
 
 "Not found" findings mean Claude looked and couldn't find a reliable source. That's a valid answer, and the note shows where it looked.
+
+## Teach Claude where to look
+
+Claude gets better the more you tell it. There are three kinds of memory, and you only write one of them:
+
+- **Where answers were found before (automatic).** When you approve a finding, the app remembers its source. Next time, Claude is told "this was found at this link for this payer, start there and check whether it changed." For other payers it's told which kinds of documents answered the field.
+- **Rejection reasons (automatic).** When you reject a finding with a reason, Claude sees that reason the next time it researches that field.
+- **Instructions you write (the Playbooks page).** Click **Teach Claude where to look** on the Research page. Choose a field, and choose whether it applies to **all payers** or **only one**. Then fill in any of:
+  - *Where to look*, such as "Check the provider manual, Claims section, before looking anywhere else."
+  - *Sources to trust or avoid*
+  - *Search terms that work*
+  - *Watch out for*, such as "The Medicaid plan has different rules. Only use the commercial documents."
+
+Instructions take effect on the next research run. They are advice: Claude still has to find the document and quote it, and the server still checks the quote. Use "only one payer" when the tip is specific, like "for Cigna, use the State Supplement". Anyone can read instructions, and managers and admins can edit them.
 
 ## Rules of thumb
 
