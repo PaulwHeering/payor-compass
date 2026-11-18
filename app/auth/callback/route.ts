@@ -28,8 +28,25 @@ export async function GET(request: NextRequest) {
 
     if (data.session?.user) {
       const user = data.session.user
-      const jobTitle = user.user_metadata?.job_title || null
       const email = user.email || ''
+      const accessToken = data.session.access_token
+
+      // Fetch user profile from Microsoft Graph to get job title
+      let jobTitle: string | null = null
+      try {
+        const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+
+        if (graphResponse.ok) {
+          const graphUser = await graphResponse.json()
+          jobTitle = graphUser.jobTitle || null
+        }
+      } catch (err) {
+        console.error('Error fetching from Microsoft Graph:', err)
+      }
 
       // Check if user's job title is allowed
       const { data: allowedJobTitles } = await supabase
