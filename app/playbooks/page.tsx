@@ -51,6 +51,11 @@ export default function PlaybooksPage() {
   const [fieldId, setFieldId] = useState('')
   const [payerId, setPayerId] = useState('') // '' = applies to all payers
   const [existingId, setExistingId] = useState<string | null>(null)
+  // When the loaded instructions were last saved. Save and Delete only go ahead if they haven't changed
+  // since, so a tip saved from the Review page (or someone else's edit) is never silently overwritten.
+  const [loadedUpdatedAt, setLoadedUpdatedAt] = useState<string | null>(null)
+  const [conflict, setConflict] = useState<Playbook | 'deleted' | null>(null)
+  const [conflictOnDelete, setConflictOnDelete] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ kind: 'error' | 'ok'; text: string } | null>(null)
@@ -94,13 +99,10 @@ export default function PlaybooksPage() {
     }
   }, [refreshKey])
 
-  // Choosing a field and scope loads whatever is already saved for that exact combination.
-  const selectTarget = (nextFieldId: string, nextPayerId: string) => {
-    setFieldId(nextFieldId)
-    setPayerId(nextPayerId)
-    setMessage(null)
-    const found = playbooks.find(p => p.field_id === nextFieldId && (p.payer_id ?? '') === nextPayerId)
+  const loadIntoForm = (found: Playbook | null | undefined) => {
     setExistingId(found?.id ?? null)
+    setLoadedUpdatedAt(found?.updated_at ?? null)
+    setConflict(null)
     setForm(
       found
         ? {
@@ -114,7 +116,39 @@ export default function PlaybooksPage() {
     )
   }
 
-  const save = async () => {
+  // Choosing a field and scope loads whatever is already saved for that exact combination.
+  const selectTarget = (nextFieldId: string, nextPayerId: string) => {
+    setFieldId(nextFieldId)
+    setPayerId(nextPayerId)
+    setMessage(null)
+    loadIntoForm(playbooks.find(p => p.field_id === nextFieldId && (p.payer_id ?? '') === nextPayerId))
+  }
+
+  // Reads what is saved right now for the chosen field and scope.
+  const fetchLatest = async (): Promise<Playbook | null> => {
+    let query = supabase
+      .from('field_playbooks')
+      .select(
+        'id, field_id, payer_id, where_to_look, how_found, search_terms, authoritative_sources, gotchas, updated_by, updated_at, payers(name), field_definitions(label)'
+      )
+      .eq('field_id', fieldId)
+    query = payerId ? query.eq('payer_id', payerId) : query.is('payer_id', null)
+    const { data } = await query.maybeSingle()
+    return (data as unknown as Playbook | null) ?? null
+  }
+
+  const showConflict = async (onDelete = false) => {
+    const latest = await fetchLatest()
+    setConflict(latest ?? 'deleted')
+    setConflictOnDelete(onDelete)
+    setBusy(false)
+    setMessage({
+      kind: 'error',
+      text: `Not ${onDelete ? 'deleted' : 'saved'}: these instructions were changed since you opened them. Compare with the latest version below.`,
+    })
+  }
+
+  const save = async (overwrite = false) => {
     if (!fieldId) return
     const terms = form.search_terms
       .split(',')
@@ -135,19 +169,49 @@ export default function PlaybooksPage() {
     }
     setBusy(true)
     setMessage(null)
-    const result = existingId
-      ? await supabase.from('field_playbooks').update(row).eq('id', existingId)
-      : await supabase
-          .from('field_playbooks')
-          .insert({ ...row, field_id: fieldId, payer_id: payerId || null })
-          .select('id')
-          .single()
-    setBusy(false)
-    if (result.error) {
-      setMessage({ kind: 'error', text: result.error.message })
-      return
+
+    // "Save mine anyway" writes over whatever is saved now; a normal save only updates the version that
+    // was loaded into the form.
+    let targetId = existingId
+    let expectedUpdatedAt = loadedUpdatedAt
+    if (overwrite) {
+      const latest = await fetchLatest()
+      targetId = latest?.id ?? null
+      expectedUpdatedAt = latest?.updated_at ?? null
     }
-    if (!existingId && result.data && 'id' in result.data) setExistingId(result.data.id as string)
+
+    let saved: { id: string; updated_at: string } | null = null
+    if (targetId) {
+      let update = supabase.from('field_playbooks').update(row).eq('id', targetId)
+      if (expectedUpdatedAt) update = update.eq('updated_at', expectedUpdatedAt)
+      const { data, error } = await update.select('id, updated_at')
+      if (error) {
+        setBusy(false)
+        setMessage({ kind: 'error', text: error.message })
+        return
+      }
+      if (!data?.length) return await showConflict()
+      saved = data[0] as { id: string; updated_at: string }
+    } else {
+      const { data, error } = await supabase
+        .from('field_playbooks')
+        .insert({ ...row, field_id: fieldId, payer_id: payerId || null })
+        .select('id, updated_at')
+        .single()
+      // 23505 = someone else created instructions for this field and scope in the meantime.
+      if (error?.code === '23505') return await showConflict()
+      if (error) {
+        setBusy(false)
+        setMessage({ kind: 'error', text: error.message })
+        return
+      }
+      saved = data as { id: string; updated_at: string }
+    }
+
+    setBusy(false)
+    setExistingId(saved.id)
+    setLoadedUpdatedAt(saved.updated_at)
+    setConflict(null)
     setMessage({ kind: 'ok', text: 'Saved. Claude will use this the next time it researches this field.' })
     setRefreshKey(k => k + 1)
   }
@@ -155,14 +219,17 @@ export default function PlaybooksPage() {
   const remove = async () => {
     if (!existingId || !confirm('Delete these instructions?')) return
     setBusy(true)
-    const { error } = await supabase.from('field_playbooks').delete().eq('id', existingId)
-    setBusy(false)
+    let del = supabase.from('field_playbooks').delete().eq('id', existingId)
+    if (loadedUpdatedAt) del = del.eq('updated_at', loadedUpdatedAt)
+    const { data, error } = await del.select('id')
     if (error) {
+      setBusy(false)
       setMessage({ kind: 'error', text: error.message })
       return
     }
-    setExistingId(null)
-    setForm(EMPTY_FORM)
+    if (!data?.length) return await showConflict(true)
+    setBusy(false)
+    loadIntoForm(null)
     setMessage({ kind: 'ok', text: 'Deleted.' })
     setRefreshKey(k => k + 1)
   }
@@ -338,7 +405,7 @@ export default function PlaybooksPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="inline-flex items-center">
                     <button
-                      onClick={save}
+                      onClick={() => save()}
                       disabled={busy}
                       className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                     >
@@ -368,6 +435,61 @@ export default function PlaybooksPage() {
               )}
               {message && (
                 <p className={`text-sm ${message.kind === 'error' ? 'text-red-600' : 'text-green-700'}`}>{message.text}</p>
+              )}
+              {conflict && canEdit && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-900">
+                  {conflict === 'deleted' ? (
+                    <p className="mb-3">Someone deleted these instructions after you opened them.</p>
+                  ) : (
+                    <>
+                      <p className="mb-2">
+                        Latest saved version
+                        {conflict.updated_by ? ` (by ${conflict.updated_by}` : ' ('}
+                        {new Date(conflict.updated_at).toLocaleString()}). Your text is still in the boxes above.
+                      </p>
+                      <dl className="mb-3 space-y-1">
+                        {(
+                          [
+                            ['Where to look', conflict.where_to_look],
+                            ['Sources to trust or avoid', conflict.authoritative_sources],
+                            ['Search terms that work', (conflict.search_terms ?? []).join(', ')],
+                            ['Watch out for', conflict.gotchas],
+                            ['How it was found before', conflict.how_found],
+                          ] as const
+                        )
+                          .filter(([, v]) => v)
+                          .map(([k, v]) => (
+                            <div key={k}>
+                              <dt className="font-semibold">{k}</dt>
+                              <dd className="whitespace-pre-wrap">{v}</dd>
+                            </div>
+                          ))}
+                      </dl>
+                    </>
+                  )}
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => {
+                        loadIntoForm(conflict === 'deleted' ? null : conflict)
+                        setMessage(null)
+                        setRefreshKey(k => k + 1)
+                      }}
+                      disabled={busy}
+                      className="border border-amber-300 bg-white hover:bg-amber-100 disabled:opacity-50 px-4 py-2 rounded-lg font-semibold"
+                    >
+                      Load the latest version (drops my changes)
+                    </button>
+                    {!conflictOnDelete && (
+                      <button
+                        onClick={() => save(true)}
+                        disabled={busy}
+                        className="border border-amber-300 bg-white hover:bg-amber-100 disabled:opacity-50 px-4 py-2 rounded-lg font-semibold"
+                      >
+                        {conflict === 'deleted' ? 'Save mine as new' : 'Save mine anyway (replaces the latest)'}
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           ) : (
