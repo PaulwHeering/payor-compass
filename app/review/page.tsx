@@ -71,6 +71,8 @@ function FindingCard({
 }) {
   const [value, setValue] = useState(finding.proposed_value ?? '')
   const [note, setNote] = useState('')
+  const [saveTip, setSaveTip] = useState(false)
+  const [tipScope, setTipScope] = useState<'payer' | 'all'>('payer')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -83,10 +85,45 @@ function FindingCard({
     setBusy(false)
   }
 
+  // Adds the note to the field's playbook ("Watch out for"), so every future research run sees it,
+  // not just the most recent ones. Only runs when the reviewer ticks the box.
+  const saveNoteAsTip = async (): Promise<boolean> => {
+    if (!saveTip) return true
+    const tip = note.trim().replace(/\s*\n\s*/g, ' ')
+    const payerId = tipScope === 'payer' ? finding.payer_id : null
+    let query = supabase.from('field_playbooks').select('id, gotchas').eq('field_id', finding.field_id)
+    query = payerId ? query.eq('payer_id', payerId) : query.is('payer_id', null)
+    const { data, error: readError } = await query.maybeSingle()
+    const existing = data as { id: string; gotchas: string | null } | null
+    if (readError) {
+      fail(`Could not save the playbook tip: ${readError.message}`)
+      return false
+    }
+    const line = `- ${tip}`
+    const stamp = { updated_by: reviewerEmail || null, updated_at: new Date().toISOString() }
+    const result = existing
+      ? existing.gotchas?.split('\n').some(l => l.trim() === line)
+        ? { error: null }
+        : await supabase
+            .from('field_playbooks')
+            .update({ gotchas: existing.gotchas?.trim() ? `${existing.gotchas.trim()}\n${line}` : line, ...stamp })
+            .eq('id', existing.id)
+      : await supabase
+          .from('field_playbooks')
+          .insert({ field_id: finding.field_id, payer_id: payerId, gotchas: line, ...stamp })
+    if (result.error) {
+      fail(`Could not save the playbook tip: ${result.error.message}`)
+      return false
+    }
+    return true
+  }
+
   const approve = async () => {
     if (!value.trim()) return fail('The value cannot be empty.')
+    if (saveTip && !note.trim()) return fail('Write a note to save it as a playbook tip.')
     setBusy(true)
     setError(null)
+    if (!(await saveNoteAsTip())) return
 
     if (edited) {
       const { data, error: updateError } = await supabase
@@ -123,6 +160,7 @@ function FindingCard({
     }
     setBusy(true)
     setError(null)
+    if (!(await saveNoteAsTip())) return
     const { data, error: updateError } = await supabase
       .from('findings')
       .update({
@@ -277,8 +315,48 @@ function FindingCard({
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="Note (required to reject or ask for more info)"
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
           />
+          <div className="mb-3 text-sm text-slate-700">
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={saveTip}
+                onChange={e => setSaveTip(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              Also save this note as a playbook tip, so Claude always follows it for this field
+            </label>
+            {saveTip && (
+              <div className="mt-2 ml-6 flex flex-wrap items-center gap-4">
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`tip-scope-${finding.id}`}
+                    checked={tipScope === 'payer'}
+                    onChange={() => setTipScope('payer')}
+                  />
+                  For {finding.payers?.name ?? 'this payer'} only
+                </label>
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`tip-scope-${finding.id}`}
+                    checked={tipScope === 'all'}
+                    onChange={() => setTipScope('all')}
+                  />
+                  For all payers
+                </label>
+                <p className="w-full text-xs text-slate-500">
+                  It is added under &ldquo;Watch out for&rdquo; on the{' '}
+                  <Link href="/playbooks" className="text-blue-600 hover:text-blue-700 underline">
+                    Playbooks
+                  </Link>{' '}
+                  page, where you can edit or remove it. Don&apos;t include member information.
+                </p>
+              </div>
+            )}
+          </div>
           <div className="flex flex-wrap gap-3">
             <button
               onClick={approve}
