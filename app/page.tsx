@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './providers'
+import InfoTip from '@/app/components/InfoTip'
 
 interface Payer {
   id: string
@@ -209,41 +210,65 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               {(userRole === 'manager' || userRole === 'admin') && (
-                <Link
-                  href="/research"
-                  className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Research
-                </Link>
+                <span className="inline-flex items-center">
+                  <Link
+                    href="/research"
+                    className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
+                  >
+                    Research
+                  </Link>
+                  <InfoTip label="Research" align="right">
+                    Ask Claude to look up information for a payer on the internet, such as timely filing limits or
+                    prior authorization rules. Claude only proposes values; nothing changes until someone approves
+                    them on the Review page.
+                  </InfoTip>
+                </span>
               )}
               {(userRole === 'manager' || userRole === 'admin') && (
-                <Link
-                  href="/review"
-                  className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Review findings
-                  {pendingFindings > 0 && (
-                    <span className="ml-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                      {pendingFindings}
-                    </span>
-                  )}
-                </Link>
+                <span className="inline-flex items-center">
+                  <Link
+                    href="/review"
+                    className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
+                  >
+                    Review findings
+                    {pendingFindings > 0 && (
+                      <span className="ml-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        {pendingFindings}
+                      </span>
+                    )}
+                  </Link>
+                  <InfoTip label="Review findings" align="right">
+                    Check the values Claude found against their sources, then approve, reject or ask for more info.
+                    The blue number is how many findings are waiting for a decision.
+                  </InfoTip>
+                </span>
               )}
               {(userRole === 'manager' || userRole === 'admin') && (
-                <Link
-                  href="/playbooks"
-                  title="Standing instructions that tell Claude where to look for each field"
-                  className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Playbooks
-                </Link>
+                <span className="inline-flex items-center">
+                  <Link
+                    href="/playbooks"
+                    className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
+                  >
+                    Playbooks
+                  </Link>
+                  <InfoTip label="Playbooks" align="right">
+                    Standing instructions that tell Claude where to look and what to watch out for when it researches
+                    each field, for all payers or for one payer.
+                  </InfoTip>
+                </span>
               )}
-              <Link
-                href="/payer/new"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
-              >
-                + New Payer
-              </Link>
+              <span className="inline-flex items-center">
+                <Link
+                  href="/payer/new"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
+                >
+                  + New Payer
+                </Link>
+                <InfoTip label="New Payer" align="right">
+                  Add an insurance payer that isn&apos;t in the list yet. You can fill in its details yourself, or
+                  research them with Claude afterwards.
+                </InfoTip>
+              </span>
               {user && (
                 <div className="relative">
                   <button
@@ -267,18 +292,24 @@ export default function Home() {
                       </div>
                       {userRole === 'admin' && (
                         <>
-                          <Link
-                            href="/admin/job-titles"
-                            className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 border-b border-slate-200"
-                          >
-                            Manage Job Titles
-                          </Link>
-                          <Link
-                            href="/admin/field-sources"
-                            className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 border-b border-slate-200"
-                          >
-                            Field Sources
-                          </Link>
+                          <div className="flex items-center justify-between pr-3 border-b border-slate-200 hover:bg-slate-50">
+                            <Link href="/admin/job-titles" className="flex-1 px-4 py-2 text-sm text-slate-700">
+                              Manage Job Titles
+                            </Link>
+                            <InfoTip label="Manage Job Titles" align="right">
+                              Choose which job titles can sign in to Payor Compass and what role each one gets (for
+                              example, who can review findings).
+                            </InfoTip>
+                          </div>
+                          <div className="flex items-center justify-between pr-3 border-b border-slate-200 hover:bg-slate-50">
+                            <Link href="/admin/field-sources" className="flex-1 px-4 py-2 text-sm text-slate-700">
+                              Field Sources
+                            </Link>
+                            <InfoTip label="Field Sources" align="right">
+                              Choose, for each field, whether Claude researches it on the internet or it is filled from
+                              files the team uploads. Only &ldquo;Internet&rdquo; fields appear on the Research page.
+                            </InfoTip>
+                          </div>
                         </>
                       )}
                       <button
@@ -295,12 +326,20 @@ export default function Home() {
           </div>
 
           {/* Search */}
+          <p className="mb-1 text-sm font-semibold text-slate-700">
+            Search
+            <InfoTip label="Search">
+              Type part of a payer&apos;s name to show only matching payers in the table below. Clear the box to see
+              them all again.
+            </InfoTip>
+          </p>
           <div className="relative">
             <input
               type="text"
               placeholder="Search payers by name..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
+              aria-label="Search payers by name"
               className="w-full px-5 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
             />
             <svg className="absolute right-4 top-3.5 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -337,6 +376,16 @@ export default function Home() {
                 )}
               </div>
             ) : (
+              <>
+              <p className="mb-2 text-sm text-slate-600">
+                How to read this table
+                <InfoTip label="How to read this table">
+                  One row per payer. Click a payer&apos;s name to open its details. Each section column shows how many
+                  of that section&apos;s fields have a value: red is 0%, orange is under half, yellow is partly
+                  filled and green is complete. &ldquo;Updated&rdquo; is when the payer&apos;s record last changed.
+                  Click any column heading to sort by it; click again to reverse the order.
+                </InfoTip>
+              </p>
               <div className="bg-white rounded-xl shadow-md overflow-x-auto border border-slate-200">
                 <table className="w-full">
                   <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
@@ -399,6 +448,7 @@ export default function Home() {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </>
         )}
