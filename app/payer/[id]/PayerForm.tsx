@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import SourceBadge from '@/app/components/SourceBadge'
 
 interface Section {
   key: string
@@ -425,6 +426,7 @@ export default function PayerForm() {
               <div key={field.id} className="pb-8 border-b border-slate-200 last:border-0">
                 <label className="block text-sm font-semibold text-slate-900 mb-3">
                   {field.label}
+                  <SourceBadge sectionKey={field.section_key} fieldKey={field.key} />
                   {field.help && (
                     <span className="block text-xs font-normal text-slate-500 mt-1">
                       {field.help}

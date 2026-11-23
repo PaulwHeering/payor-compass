@@ -78,3 +78,40 @@ export function isResearchable(sectionKey: string, fieldKey: string): boolean {
 
 export const NOT_RESEARCHABLE_MESSAGE =
   'This field is not researched on the internet. It is filled from files the team provides.'
+
+// How each field gets its value. Shown as a badge next to every field in the app.
+//   internet : Claude researches it on the web (the allowlist above)
+//   medicaid : web research for Medicaid payers; for commercial payers the team supplies it from files
+//   file     : filled from contracts or other files the team uploads
+//   hold     : not defined yet
+export type FieldSource = 'internet' | 'medicaid' | 'file' | 'hold'
+
+export function fieldSource(sectionKey: string, fieldKey: string): FieldSource {
+  if (isResearchable(sectionKey, fieldKey)) return 'internet'
+  if (sectionKey === 'staff_coding' && (fieldKey === 'contracted_codes' || fieldKey === 'staff_level_per_code')) return 'medicaid'
+  if (sectionKey === 'clinical_services') return 'hold'
+  return 'file'
+}
+
+export const FIELD_SOURCE_INFO: Record<FieldSource, { label: string; title: string; className: string }> = {
+  internet: {
+    label: 'Researched by Claude',
+    title: 'Claude searches the internet for this and proposes a sourced value for your review.',
+    className: 'bg-blue-100 text-blue-700',
+  },
+  medicaid: {
+    label: 'Web if Medicaid · files if commercial',
+    title: 'Researched on the internet for Medicaid payers. For commercial payers the team provides it from files.',
+    className: 'bg-violet-100 text-violet-700',
+  },
+  file: {
+    label: 'From uploaded files',
+    title: 'Not researched on the internet. Filled from contracts or other files the team provides.',
+    className: 'bg-amber-100 text-amber-800',
+  },
+  hold: {
+    label: 'On hold',
+    title: 'This field is not defined yet.',
+    className: 'bg-slate-100 text-slate-600',
+  },
+}

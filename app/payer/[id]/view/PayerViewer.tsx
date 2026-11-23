@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import AuditLog from './AuditLog'
+import SourceBadge from '@/app/components/SourceBadge'
 
 interface Section {
   key: string
@@ -206,6 +207,7 @@ export default function PayerViewer() {
                           <div key={field.id} className="pb-4 border-b border-slate-100 last:border-0">
                             <p className="text-sm font-semibold text-slate-700">
                               {field.label}
+                              <SourceBadge sectionKey={field.section_key} fieldKey={field.key} />
                             </p>
                             <p className="text-sm text-slate-400 italic mt-1">Not provided</p>
                           </div>
@@ -216,6 +218,7 @@ export default function PayerViewer() {
                         <div key={field.id} className="pb-4 border-b border-slate-100 last:border-0">
                           <p className="text-sm font-semibold text-slate-700 mb-2">
                             {field.label}
+                            <SourceBadge sectionKey={field.section_key} fieldKey={field.key} />
                           </p>
                           {field.repeatable ? (
                             <ul className="space-y-1">
