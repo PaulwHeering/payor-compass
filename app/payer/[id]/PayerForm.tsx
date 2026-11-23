@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import SourceBadge from '@/app/components/SourceBadge'
+import InfoTip from '@/app/components/InfoTip'
 
 interface Section {
   key: string
@@ -319,7 +320,13 @@ export default function PayerForm() {
               ← Back to Payers
             </Link>
             <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
-              <label className="block text-sm font-semibold text-slate-600 mb-3">Payer Name</label>
+              <label className="block text-sm font-semibold text-slate-600 mb-3">
+                Payer Name
+                <InfoTip label="Payer Name">
+                  The payer&apos;s main name as it should appear in the list. Put other names the payer goes by in
+                  the &ldquo;Payer name(s) / AKAs&rdquo; field instead.
+                </InfoTip>
+              </label>
               <input
                 type="text"
                 value={payerName}
@@ -331,6 +338,11 @@ export default function PayerForm() {
 
             <h1 className="text-4xl font-bold text-slate-900 mb-2">
               Payer Profile — Categories & Contents
+              <InfoTip label="Sections">
+                Click a section card to open it and fill in its fields. The grey number is how many fields it has.
+                You can move between sections before saving; nothing is saved until you click Save. Saved values
+                go live straight away (there is no review step here) and are recorded in Change History.
+              </InfoTip>
             </h1>
             <p className="text-slate-600">
               {isNew ? 'Enter insurance information across 7 sections' : 'Update payer information'}
@@ -375,19 +387,29 @@ export default function PayerForm() {
 
           {/* Save buttons */}
           <div className="flex gap-4 justify-center">
-            <button
-              onClick={savePayer}
-              disabled={saving}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save All Changes'}
-            </button>
-            <Link
-              href="/"
-              className="px-8 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
-            >
-              Cancel
-            </Link>
+            <span className="inline-flex items-center">
+              <button
+                onClick={savePayer}
+                disabled={saving}
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save All Changes'}
+              </button>
+              <InfoTip label="Save All Changes">
+                Saves the payer name and every change you made in any section, then returns to the payer list.
+              </InfoTip>
+            </span>
+            <span className="inline-flex items-center">
+              <Link
+                href="/"
+                className="px-8 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
+              >
+                Cancel
+              </Link>
+              <InfoTip label="Cancel" align="right">
+                Goes back to the payer list without saving. Any changes you haven&apos;t saved are lost.
+              </InfoTip>
+            </span>
           </div>
         </div>
       </main>
@@ -415,6 +437,12 @@ export default function PayerForm() {
           </h1>
           <p className="text-slate-600">
             {sectionFields.length} fields to complete
+            <InfoTip label="Filling in fields">
+              Type each value in its box. The grey text under a field name explains what it means, and the coloured
+              tag says how the field normally gets its value. Some fields can hold several values: use
+              &ldquo;+ Add another&rdquo; to add one and Remove to delete one. Leave a box empty if you don&apos;t
+              know the answer.
+            </InfoTip>
           </p>
         </div>
 
@@ -491,25 +519,43 @@ export default function PayerForm() {
 
         {/* Action buttons */}
         <div className="flex gap-4">
-          <button
-            onClick={savePayer}
-            disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-          <button
-            onClick={() => setActiveSection(null)}
-            className="px-8 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
-          >
-            Back to Sections
-          </button>
-          <Link
-            href="/"
-            className="px-8 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
-          >
-            Done
-          </Link>
+          <span className="inline-flex items-center">
+            <button
+              onClick={savePayer}
+              disabled={saving}
+              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+            <InfoTip label="Save Changes">
+              Saves this section and any other sections you changed, then returns to the payer list. Saved values go
+              live straight away and are recorded in Change History.
+            </InfoTip>
+          </span>
+          <span className="inline-flex items-center">
+            <button
+              onClick={() => setActiveSection(null)}
+              className="px-8 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
+            >
+              Back to Sections
+            </button>
+            <InfoTip label="Back to Sections">
+              Returns to the section cards so you can fill in another section. Your changes are kept but not saved
+              yet; click Save when you are done.
+            </InfoTip>
+          </span>
+          <span className="inline-flex items-center">
+            <Link
+              href="/"
+              className="px-8 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
+            >
+              Done
+            </Link>
+            <InfoTip label="Done" align="right">
+              Goes back to the payer list <strong>without saving</strong>. Click Save Changes first if you want to
+              keep what you typed.
+            </InfoTip>
+          </span>
         </div>
       </div>
     </main>

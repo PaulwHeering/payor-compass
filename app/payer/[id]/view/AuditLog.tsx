@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import InfoTip from '@/app/components/InfoTip'
 
 interface AuditEntry {
   id: string
@@ -71,15 +72,24 @@ export default function AuditLog({ payerId }: { payerId: string }) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full p-6 text-left hover:bg-slate-50 transition-colors flex items-center justify-between"
-      >
-        <h2 className="text-lg font-bold text-slate-900">Change History</h2>
-        <span className={`text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>
-          ▼
+      <div className="flex items-center hover:bg-slate-50 transition-colors">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex-1 p-6 pr-3 text-left flex items-center justify-between"
+        >
+          <h2 className="text-lg font-bold text-slate-900">Change History</h2>
+          <span className={`text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>
+            ▼
+          </span>
+        </button>
+        <span className="pr-6">
+          <InfoTip label="Change History" align="right">
+            Every change made to this payer&apos;s information, newest first: which field, who changed it, when,
+            and the value before and after. Values approved on the Review page appear here too. Click the heading
+            to show or hide the list.
+          </InfoTip>
         </span>
-      </button>
+      </div>
 
       {expanded && (
         <div className="px-6 pb-6 border-t border-slate-200">

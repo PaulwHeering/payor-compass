@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import AuditLog from './AuditLog'
 import SourceBadge from '@/app/components/SourceBadge'
+import InfoTip from '@/app/components/InfoTip'
 
 interface Section {
   key: string
@@ -146,18 +147,32 @@ export default function PayerViewer() {
               </h1>
               <p className="text-sm text-slate-500 mt-2">
                 Updated {new Date(payer?.updated_at || '').toLocaleDateString()}
+                <InfoTip label="Updated">The date this payer&apos;s record was last changed.</InfoTip>
               </p>
             </div>
-            <Link
-              href={`/payer/${payerId}`}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Edit Payer
-            </Link>
+            <span className="inline-flex items-center">
+              <Link
+                href={`/payer/${payerId}`}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                Edit Payer
+              </Link>
+              <InfoTip label="Edit Payer" align="right">
+                Opens the form to change this payer&apos;s name and information directly. Changes go live as
+                soon as you save (no review step) and are recorded in Change History. Only managers and admins can
+                save changes.
+              </InfoTip>
+            </span>
           </div>
 
           <p className="text-slate-600 text-lg">
             Payer Profile — Categories & Contents
+            <InfoTip label="Payer Profile">
+              Everything recorded for this payer, grouped into sections. Click a section to open or close it. The
+              grey number is how many fields the section has. &ldquo;Not provided&rdquo; means nobody has filled
+              that field in yet. The coloured tag next to each field says how it gets its value: researched by
+              Claude on the internet, or filled from files the team uploads.
+            </InfoTip>
           </p>
         </div>
 
@@ -255,24 +270,40 @@ export default function PayerViewer() {
 
         {/* Footer Action */}
         <div className="flex gap-4 justify-center">
-          <Link
-            href={`/payer/${payerId}`}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-          >
-            Edit This Payer
-          </Link>
-          <Link
-            href="/"
-            className="px-8 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
-          >
-            Back to List
-          </Link>
-          <button
-            onClick={deletePayer}
-            className="px-8 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 font-semibold transition-colors"
-          >
-            Delete Payer
-          </button>
+          <span className="inline-flex items-center">
+            <Link
+              href={`/payer/${payerId}`}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+            >
+              Edit This Payer
+            </Link>
+            <InfoTip label="Edit This Payer">
+              Opens the form to change this payer&apos;s name and information directly. Changes go live as
+                soon as you save (no review step) and are recorded in Change History. Only managers and admins can
+                save changes.
+            </InfoTip>
+          </span>
+          <span className="inline-flex items-center">
+            <Link
+              href="/"
+              className="px-8 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 font-semibold transition-colors"
+            >
+              Back to List
+            </Link>
+            <InfoTip label="Back to List">Returns to the list of all payers.</InfoTip>
+          </span>
+          <span className="inline-flex items-center">
+            <button
+              onClick={deletePayer}
+              className="px-8 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 font-semibold transition-colors"
+            >
+              Delete Payer
+            </button>
+            <InfoTip label="Delete Payer" align="right">
+              Permanently removes this payer and everything recorded for it. You are asked to confirm first, and
+              it can&apos;t be undone. Only managers and admins can delete.
+            </InfoTip>
+          </span>
         </div>
       </div>
     </main>
