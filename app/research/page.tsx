@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../providers'
+import InfoTip from '@/app/components/InfoTip'
 import { isResearchable } from '@/lib/research/scope'
 
 const MAX_FIELDS = 25
@@ -269,6 +270,10 @@ export default function ResearchPage() {
 
             <label className="block text-sm font-semibold text-slate-700 mb-1" htmlFor="payer">
               Payer
+              <InfoTip label="Payer">
+                The insurance payer to research. Claude looks up the chosen fields for this payer only. To research
+                several payers, start one at a time.
+              </InfoTip>
             </label>
             <select
               id="payer"
@@ -284,7 +289,15 @@ export default function ResearchPage() {
               ))}
             </select>
 
-            <p className="text-sm font-semibold text-slate-700 mb-2">Fields</p>
+            <p className="text-sm font-semibold text-slate-700 mb-2">
+              Fields
+              <InfoTip label="Fields">
+                Tick the pieces of information you want Claude to find. The box next to a section name ticks or
+                clears every field in it. Only fields set to &ldquo;Internet&rdquo; on the Field Sources page appear
+                here. Claude also checks fields that already have a value and proposes a change if the source now
+                says something different. Up to {MAX_FIELDS} fields at a time.
+              </InfoTip>
+            </p>
             <div className="space-y-4 mb-6">
               {sections.map(section => {
                 const sectionFields = fields.filter(f => f.section_key === section.key)
@@ -323,6 +336,11 @@ export default function ResearchPage() {
               >
                 {starting ? 'Starting…' : `Research ${selected.size} field${selected.size === 1 ? '' : 's'}`}
               </button>
+              <InfoTip label="Research fields">
+                Starts research for the chosen payer and fields. Claude works on {CONCURRENCY} fields at a time
+                and the progress appears under Recent research below. Keep this page open until they finish.
+                Results go to Review findings; nothing is published until a reviewer approves it.
+              </InfoTip>
               <p className="text-sm text-slate-500">
                 {selected.size > MAX_FIELDS
                   ? `Choose at most ${MAX_FIELDS} fields at a time.`
@@ -332,7 +350,15 @@ export default function ResearchPage() {
           </div>
         )}
 
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent research (last 24 hours)</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">
+          Recent research (last 24 hours)
+          <InfoTip label="Recent research">
+            Each box is one research request, with the status of each field. Waiting: in line to start.
+            Researching: Claude is working on it now. Done: finished, and the result is on the Review page (the note
+            next to it says what was found). Failed: something went wrong; the reason is shown and you can retry.
+            Stopped: cancelled before it started.
+          </InfoTip>
+        </h2>
         {runs.length === 0 ? (
           <p className="text-slate-500">No research yet.</p>
         ) : (
@@ -353,14 +379,26 @@ export default function ResearchPage() {
                     </div>
                     <div className="flex gap-3 text-sm">
                       {hasDone && (
-                        <Link href="/review" className="text-blue-600 hover:text-blue-700 font-semibold">
-                          Review findings →
-                        </Link>
+                        <span className="inline-flex items-center">
+                          <Link href="/review" className="text-blue-600 hover:text-blue-700 font-semibold">
+                            Review findings →
+                          </Link>
+                          <InfoTip label="Review findings" align="right">
+                            Opens the Review page, where you check each value Claude found against its source and
+                            approve, reject or ask for more info.
+                          </InfoTip>
+                        </span>
                       )}
                       {hasQueued && canRun && (
-                        <button onClick={() => stopRun(first.run_id)} className="text-slate-600 hover:text-slate-900 underline">
-                          Stop waiting fields
-                        </button>
+                        <span className="inline-flex items-center">
+                          <button onClick={() => stopRun(first.run_id)} className="text-slate-600 hover:text-slate-900 underline">
+                            Stop waiting fields
+                          </button>
+                          <InfoTip label="Stop waiting fields" align="right">
+                            Cancels the fields that haven&apos;t started yet (marked Waiting). Fields Claude is already
+                            researching finish normally, and finished results are kept.
+                          </InfoTip>
+                        </span>
                       )}
                     </div>
                   </div>
@@ -375,9 +413,14 @@ export default function ResearchPage() {
                             </span>
                           )}
                           {task.status === 'failed' && canRun && (
-                            <button onClick={() => retryTask(task.id)} className="text-sm text-blue-600 underline">
-                              Retry
-                            </button>
+                            <span className="inline-flex items-center">
+                              <button onClick={() => retryTask(task.id)} className="text-sm text-blue-600 underline">
+                                Retry
+                              </button>
+                              <InfoTip label="Retry" align="right">
+                                Puts this field back in line to be researched again. Keep this page open so it runs.
+                              </InfoTip>
+                            </span>
                           )}
                           <span className={`px-3 py-1 text-xs font-bold rounded-lg ${STATUS_STYLE[task.status]}`}>
                             {STATUS_LABEL[task.status]}
