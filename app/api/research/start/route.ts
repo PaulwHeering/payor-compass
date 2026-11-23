@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   const [payerRes, fieldsRes, activeRes] = await Promise.all([
     supabase.from('payers').select('id, name').eq('id', payerId).single(),
-    supabase.from('field_definitions').select('id, key, label, section_key').in('id', fieldIds),
+    supabase.from('field_definitions').select('id, label, source_mode').in('id', fieldIds),
     supabase
       .from('research_tasks')
       .select('field_id')
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'One or more fields do not exist.' }, { status: 400 })
   }
   // Only fields marked "research on internet" may be researched (see lib/research/scope.ts).
-  const blocked = (fieldsRes.data ?? []).filter(f => !isResearchable(f.section_key, f.key))
+  const blocked = (fieldsRes.data ?? []).filter(f => !isResearchable(f.source_mode))
   if (blocked.length > 0) {
     return NextResponse.json(
       { error: `${NOT_RESEARCHABLE_MESSAGE} Remove: ${blocked.map(f => f.label).join(', ')}.` },

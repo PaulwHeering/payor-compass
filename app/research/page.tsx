@@ -20,7 +20,7 @@ interface Section {
 }
 interface Field {
   id: string
-  key: string
+  source_mode: string
   section_key: string
   label: string
   position: number
@@ -87,12 +87,12 @@ export default function ResearchPage() {
       const [payerRes, sectionRes, fieldRes] = await Promise.all([
         supabase.from('payers').select('id, name').order('name'),
         supabase.from('sections').select('key, label, position').order('position'),
-        supabase.from('field_definitions').select('id, key, section_key, label, position').order('position'),
+        supabase.from('field_definitions').select('id, source_mode, section_key, label, position').order('position'),
       ])
       if (cancelled) return
       setPayers(payerRes.data ?? [])
       // Only fields marked "research on internet" are offered; the rest are filled from files.
-      const researchable = ((fieldRes.data ?? []) as Field[]).filter(f => isResearchable(f.section_key, f.key))
+      const researchable = ((fieldRes.data ?? []) as Field[]).filter(f => isResearchable(f.source_mode))
       setFields(researchable)
       const withFields = new Set(researchable.map(f => f.section_key))
       setSections((sectionRes.data ?? []).filter(s => withFields.has(s.key)))
@@ -241,8 +241,8 @@ export default function ResearchPage() {
           for any field.
         </p>
         <p className="text-sm text-slate-500 -mt-4 mb-6">
-          Only fields that can be found on the internet are listed. Profile details, EFT / claim form / Waystar /
-          claims address, and the contracting model are filled from files the team provides.
+          Only fields that can be found on the internet are listed. Fields marked &ldquo;From uploaded files&rdquo; are
+          filled from files the team provides.
         </p>
 
         {role && !canRun && (

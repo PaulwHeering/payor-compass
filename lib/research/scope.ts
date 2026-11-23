@@ -1,97 +1,30 @@
-// Which fields Claude may research on the internet.
+// How each field gets its value. Stored in field_definitions.source_mode and edited by admins on
+// /admin/field-sources. The starting values came from the team's "Payer Profile - Categories & Contents"
+// list (see the migration 20261123000009_field_source_mode.sql).
 //
-// Source of truth: "Payer Profile - Categories & Contents" (the team's field list). Every field there is
-// marked "Research on internet", "Don't research on internet", "If Medicaid... / If commercial..." or HOLD.
-// Only the first group is researched here. The "don't research" fields will be filled by a separate process
-// where the team gives us files to read; they must never be searched for on the web.
+//   internet : Claude researches it on the web. The ONLY mode the research engine will run.
+//   medicaid : web research for Medicaid payers; for commercial payers the team supplies it from files.
+//              Not researched yet: the app has no line-of-business setting.
+//   file     : filled from contracts or other files the team uploads. Never searched on the web.
+//   hold     : not defined yet. Never searched on the web.
 //
-// Fields are identified as "section_key.field_key" because some keys repeat across sections
-// (for example grievances and escalation_path).
-//
-// This file is imported by the research engine, the API routes and the Research page, and it is
-// mirrored in CLAUDE.md and the research-payer skill. Change all of them together.
+// This file is imported by the research engine, the API routes and the pages. The rule is also written
+// in CLAUDE.md and the research-payer skill.
 
-export const RESEARCHABLE_FIELDS: ReadonlySet<string> = new Set([
-  // Links
-  'links.provider_portal',
-  'links.provider_manual',
-  'links.clinical_policy',
-  'links.billing_manual',
+export const FIELD_SOURCES = ['internet', 'medicaid', 'file', 'hold'] as const
+export type FieldSource = (typeof FIELD_SOURCES)[number]
 
-  // Staff & Coding
-  'staff_coding.supervision_billing_rules',
-  'staff_coding.required_modifiers',
-  'staff_coding.cap_daily',
-  'staff_coding.cap_weekly',
-  'staff_coding.cap_monthly',
-  'staff_coding.cap_auth_duration',
-  'staff_coding.telehealth_allowance',
-  'staff_coding.telehealth_requirements',
+export function isFieldSource(value: unknown): value is FieldSource {
+  return typeof value === 'string' && (FIELD_SOURCES as readonly string[]).includes(value)
+}
 
-  // Authorizations
-  'authorizations.forms',
-  'authorizations.submission_process',
-  'authorizations.required_diagnoses',
-  'authorizations.restricted_diagnoses',
-  'authorizations.supporting_documentation',
-  'authorizations.submission_timelines',
-  'authorizations.turnaround_timelines',
-  'authorizations.peer_to_peer',
-  'authorizations.medical_necessity',
-  'authorizations.appeals',
-  'authorizations.grievances',
-
-  // Credentialing
-  'credentialing.levels_requiring_credentialing',
-  'credentialing.process_turnaround',
-  'credentialing.revalidation',
-  'credentialing.staff_termination',
-  'credentialing.training_background_monitoring',
-  'credentialing.education_requirements',
-  'credentialing.escalation_path',
-
-  // Billing
-  'billing.fee_schedule_status',
-  'billing.claims_submission',
-  'billing.timely_filing_limit',
-  'billing.initial_billing_timeline',
-  'billing.clean_claim_payment_timeline',
-  'billing.cob',
-  'billing.overpayment',
-  'billing.grievances',
-  'billing.escalation_path',
-])
-
-// Deliberately NOT researched (kept here so the reason is not lost):
-// - profile.*                              : "Don't research on internet" (TIN, states, contract dates, terms, contacts)
-// - credentialing.contracting_model        : "Don't research on internet"
-// - billing.eft / claim_form / waystar_id / claims_address : "Don't research on internet"
-// - billing.fee_schedule_link              : restricted-access link, supplied by the team
-// - staff_coding.contracted_codes / staff_level_per_code : research only for Medicaid; for commercial the
-//                                            team supplies them. The app has no line-of-business setting
-//                                            yet, so these are off until that exists.
-// - clinical_services.*                    : on HOLD until the fields are defined
-
-export function isResearchable(sectionKey: string, fieldKey: string): boolean {
-  return RESEARCHABLE_FIELDS.has(`${sectionKey}.${fieldKey}`)
+// Only "internet" fields are researched on the web.
+export function isResearchable(sourceMode: string | null | undefined): boolean {
+  return sourceMode === 'internet'
 }
 
 export const NOT_RESEARCHABLE_MESSAGE =
   'This field is not researched on the internet. It is filled from files the team provides.'
-
-// How each field gets its value. Shown as a badge next to every field in the app.
-//   internet : Claude researches it on the web (the allowlist above)
-//   medicaid : web research for Medicaid payers; for commercial payers the team supplies it from files
-//   file     : filled from contracts or other files the team uploads
-//   hold     : not defined yet
-export type FieldSource = 'internet' | 'medicaid' | 'file' | 'hold'
-
-export function fieldSource(sectionKey: string, fieldKey: string): FieldSource {
-  if (isResearchable(sectionKey, fieldKey)) return 'internet'
-  if (sectionKey === 'staff_coding' && (fieldKey === 'contracted_codes' || fieldKey === 'staff_level_per_code')) return 'medicaid'
-  if (sectionKey === 'clinical_services') return 'hold'
-  return 'file'
-}
 
 export const FIELD_SOURCE_INFO: Record<FieldSource, { label: string; title: string; className: string }> = {
   internet: {

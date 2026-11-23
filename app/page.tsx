@@ -264,6 +264,12 @@ export default function Home() {
                           >
                             Manage Job Titles
                           </Link>
+                          <Link
+                            href="/admin/field-sources"
+                            className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 border-b border-slate-200"
+                          >
+                            Field Sources
+                          </Link>
                         </>
                       )}
                       <button

@@ -34,11 +34,10 @@ where f.label ilike '%timely filing%' or f.key = 'timely_filing_limit'
 order by f.section_key, f.position;
 ```
 
-**Only research fields on the allowlist in `lib/research/scope.ts`** (`RESEARCHABLE_FIELDS`, written as
-`section_key.key`). Read that file first. For a whole section, research only the allowlisted fields in it.
-If the user asks for a field that isn't on the list (Profile section, EFT / claim form / Waystar ID /
-claims address, contracting model, fee schedule link, contracted codes, staff level per code, Clinical
-Services), tell them it is filled from team-provided files and skip it. Don't search the web for it.
+**Only research fields whose `source_mode` is `internet`.** Add `f.source_mode` to the field query above
+and drop every field where it is not `internet`. For a whole section, research only those. If the user asks
+for a field set to `file`, `medicaid` or `hold`, tell them it is filled from team-provided files (or is on
+hold) and skip it. Don't search the web for it. Admins change this in the app at `/admin/field-sources`.
 
 For a whole section, filter on `section_key`. If a payer doesn't exist, tell the user to add it in the
 app first. Don't create payers yourself.

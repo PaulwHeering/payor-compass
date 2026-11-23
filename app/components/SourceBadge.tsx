@@ -1,8 +1,8 @@
-import { FIELD_SOURCE_INFO, fieldSource } from '@/lib/research/scope'
+import { FIELD_SOURCE_INFO, isFieldSource } from '@/lib/research/scope'
 
 // Small tag that says how a field gets its value: researched by Claude, or filled from uploaded files.
-export default function SourceBadge({ sectionKey, fieldKey }: { sectionKey: string; fieldKey: string }) {
-  const info = FIELD_SOURCE_INFO[fieldSource(sectionKey, fieldKey)]
+export default function SourceBadge({ mode }: { mode: string | null | undefined }) {
+  const info = FIELD_SOURCE_INFO[isFieldSource(mode) ? mode : 'file']
   return (
     <span
       title={info.title}

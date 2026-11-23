@@ -29,7 +29,7 @@ That's all.
 
 ## What Claude researches
 
-The Research page only lists fields that can be found on the internet. Profile details (TIN, states, contract dates, renewal/termination terms, contacts), EFT / claim form / Waystar ID / claims address, the contracting model (individual vs. company NPI), the fee schedule link, contracted codes and staff level per code, and Clinical Services are **not** researched. They will be filled from files you provide.
+The Research page only lists fields set to **Researched by Claude**. Every field shows a badge saying how it gets its value. By default, Profile details (TIN, states, contract dates, renewal/termination terms, contacts), EFT / claim form / Waystar ID / claims address, the contracting model (individual vs. company NPI), the fee schedule link, contracted codes and staff level per code, and Clinical Services are **not** researched. They will be filled from files you provide. Admins can change any field under **Field Sources** in the account menu on the home page (`/admin/field-sources`).
 
 ## Research a payer
 

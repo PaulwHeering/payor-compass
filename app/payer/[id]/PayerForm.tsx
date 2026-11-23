@@ -20,6 +20,7 @@ interface Field {
   input_type: string
   repeatable: boolean
   help?: string
+  source_mode?: string
   position: number
 }
 
@@ -426,7 +427,7 @@ export default function PayerForm() {
               <div key={field.id} className="pb-8 border-b border-slate-200 last:border-0">
                 <label className="block text-sm font-semibold text-slate-900 mb-3">
                   {field.label}
-                  <SourceBadge sectionKey={field.section_key} fieldKey={field.key} />
+                  <SourceBadge mode={field.source_mode} />
                   {field.help && (
                     <span className="block text-xs font-normal text-slate-500 mt-1">
                       {field.help}

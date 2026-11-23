@@ -28,6 +28,7 @@ interface FieldDef {
   help: string | null
   repeatable: boolean
   section_key: string
+  source_mode: string
 }
 
 interface AcceptedFinding {
@@ -201,14 +202,14 @@ export async function runTask(supabase: SupabaseClient, taskId: string): Promise
     // ---- gather context ----
     const [payerRes, fieldRes, liveRes] = await Promise.all([
       supabase.from('payers').select('id, name').eq('id', task.payer_id).single(),
-      supabase.from('field_definitions').select('id, key, label, help, repeatable, section_key').eq('id', task.field_id).single(),
+      supabase.from('field_definitions').select('id, key, label, help, repeatable, section_key, source_mode').eq('id', task.field_id).single(),
       supabase.from('payer_values').select('id, value, position').eq('payer_id', task.payer_id).eq('field_id', task.field_id).order('position'),
     ])
     const payer = payerRes.data as { id: string; name: string } | null
     const field = fieldRes.data as FieldDef | null
     if (!payer || !field) return await fail('The payer or field no longer exists.')
     // Backstop: even if a task was queued some other way, never search the web for these fields.
-    if (!isResearchable(field.section_key, field.key)) return await fail(NOT_RESEARCHABLE_MESSAGE)
+    if (!isResearchable(field.source_mode)) return await fail(NOT_RESEARCHABLE_MESSAGE)
     const liveValues = (liveRes.data ?? []) as { id: string; value: string; position: number }[]
 
     const [sectionRes, playbookRes, rejectionRes, approvedRes] = await Promise.all([
