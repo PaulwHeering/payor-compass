@@ -212,7 +212,7 @@ export async function runTask(supabase: SupabaseClient, taskId: string): Promise
     if (!isResearchable(field.source_mode)) return await fail(NOT_RESEARCHABLE_MESSAGE)
     const liveValues = (liveRes.data ?? []) as { id: string; value: string; position: number }[]
 
-    const [sectionRes, playbookRes, rejectionRes, approvedRes] = await Promise.all([
+    const [sectionRes, playbookRes, rejectionRes, approvedRes, otherNotesRes] = await Promise.all([
       supabase.from('sections').select('label').eq('key', field.section_key).single(),
       supabase
         .from('field_playbooks')
@@ -236,6 +236,16 @@ export async function runTask(supabase: SupabaseClient, taskId: string): Promise
         .not('source_url', 'is', null)
         .order('reviewed_at', { ascending: false })
         .limit(12),
+      // Notes reviewers left when approving or asking for more information. Fetched apart from
+      // rejections so a run of approvals can't crowd out the rejection lessons.
+      supabase
+        .from('findings')
+        .select('status, payer_id, proposed_value, reviewer_notes, payers(name)')
+        .eq('field_id', field.id)
+        .in('status', ['approved', 'needs_info'])
+        .not('reviewer_notes', 'is', null)
+        .order('reviewed_at', { ascending: false })
+        .limit(10),
     ])
 
     const approved = (approvedRes.data ?? []) as unknown as {
@@ -282,6 +292,20 @@ export async function runTask(supabase: SupabaseClient, taskId: string): Promise
       )
       .join('\n\n')
     const rejectionText = (rejectionRes.data ?? []).map(r => `- ${r.reviewer_notes}`).join('\n')
+    const otherNotes = (otherNotesRes.data ?? []) as unknown as {
+      status: 'approved' | 'needs_info'
+      payer_id: string
+      proposed_value: string | null
+      reviewer_notes: string
+      payers: { name: string } | null
+    }[]
+    const noteLine = (n: (typeof otherNotes)[number]) => {
+      const who = n.payer_id === payer.id ? payer.name : (n.payers?.name ?? 'another payer')
+      const value = n.proposed_value ? ` (value: "${n.proposed_value.slice(0, 200)}")` : ''
+      return `- ${who}${value}: ${n.reviewer_notes.replace(/\s*\n\s*/g, ' ')}`
+    }
+    const approvalNotesText = otherNotes.filter(n => n.status === 'approved').map(noteLine).join('\n')
+    const needsInfoText = otherNotes.filter(n => n.status === 'needs_info').map(noteLine).join('\n')
 
     const userPrompt = [
       `Payer: ${payer.name}`,
@@ -299,6 +323,12 @@ export async function runTask(supabase: SupabaseClient, taskId: string): Promise
         ? `Where this field was found and approved for other payers (shows which kinds of documents answer it):\n${approvedOthers}`
         : null,
       rejectionText ? `Reviewers rejected earlier findings for this field for these reasons:\n${rejectionText}` : null,
+      approvalNotesText
+        ? `Reviewers approved earlier findings for this field and left these notes (follow them):\n${approvalNotesText}`
+        : null,
+      needsInfoText
+        ? `Reviewers asked for more information on earlier findings for this field (make sure your answer covers this):\n${needsInfoText}`
+        : null,
       'Research it now.',
     ]
       .filter(Boolean)

@@ -70,6 +70,17 @@ where field_id in ('<field_id>', ...) and status = 'rejected' and reviewer_notes
 order by reviewed_at desc limit 10;
 ```
 
+Also read the notes reviewers left when approving a finding or asking for more information. Follow
+approval notes, and make sure your answer covers what "needs info" notes asked for:
+
+```sql
+select fi.status, p.name as payer, fi.proposed_value, fi.reviewer_notes from findings fi
+join payers p on p.id = fi.payer_id
+where fi.field_id in ('<field_id>', ...) and fi.status in ('approved', 'needs_info')
+  and fi.reviewer_notes is not null
+order by fi.reviewed_at desc limit 10;
+```
+
 ## 3. Note the run details
 
 The research run row is created in step 6, in the same statement as the findings, so the user is
