@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../providers'
+import InfoTip from '@/app/components/InfoTip'
 
 interface Finding {
   id: string
@@ -212,10 +213,23 @@ function FindingCard({
               {finding.confidence} confidence
             </span>
           )}
+          {finding.status !== 'not_found' && (
+            <InfoTip label="Confidence" align="right">
+              How sure Claude is that the value is right. High means the source states it plainly. Medium or
+              low means Claude had to interpret the wording or the source may be out of date, so check those
+              more carefully.
+            </InfoTip>
+          )}
           {finding.replaces_value_id && (
             <span className="px-3 py-1 text-xs font-bold rounded-lg bg-blue-100 text-blue-700">
               Changes a live value
             </span>
+          )}
+          {finding.replaces_value_id && (
+            <InfoTip label="Changes a live value" align="right">
+              This payer already has a published value for this field, and Claude found something different.
+              Approving replaces the current live value (shown below) with this one.
+            </InfoTip>
           )}
         </div>
       </div>
@@ -226,7 +240,12 @@ function FindingCard({
         <>
           {finding.replaced && (
             <div className="mb-4">
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Current live value</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
+                Current live value
+                <InfoTip label="Current live value">
+                  What the app shows for this payer today. If you approve, it is replaced by the value below.
+                </InfoTip>
+              </p>
               <p className="text-slate-700 bg-slate-50 border border-slate-200 rounded-lg p-3 whitespace-pre-wrap">
                 {finding.replaced.value}
               </p>
@@ -235,6 +254,11 @@ function FindingCard({
 
           <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
             {isPending && canReview ? 'Value to publish (you can edit it)' : 'Proposed value'}
+            <InfoTip label={isPending && canReview ? 'Value to publish' : 'Proposed value'}>
+              {isPending && canReview
+                ? 'The value Claude found. This is exactly what goes live when you click Approve and publish. If it is nearly right, fix the wording here before approving; Claude sees your correction in future research.'
+                : 'The value Claude proposed for this field.'}
+            </InfoTip>
           </p>
           {isPending && canReview ? (
             <textarea
@@ -248,20 +272,32 @@ function FindingCard({
           )}
           {edited && isPending && <p className="text-xs text-orange-600 mb-3">Edited from Claude&apos;s proposal.</p>}
 
-          <p className="text-xs font-semibold text-slate-500 uppercase mt-4 mb-1">Source quote</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase mt-4 mb-1">
+            Source quote
+            <InfoTip label="Source quote">
+              The exact words Claude copied from the source document to back up the value. Read it and check it
+              really says what the value says, for the right plan, state and year.
+            </InfoTip>
+          </p>
           <blockquote className="border-l-4 border-slate-300 pl-4 text-slate-700 italic mb-2 whitespace-pre-wrap">
             {finding.source_quote}
           </blockquote>
           <p className="text-sm mb-1">
             {link ? (
-              <a
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 underline break-all"
-              >
-                Open source document
-              </a>
+              <>
+                <a
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 underline break-all"
+                >
+                  Open source document
+                </a>
+                <InfoTip label="Open source document">
+                  Opens the page or PDF the quote came from in a new tab. Use it to check the quote in context, for
+                  example that it isn&apos;t from an old manual or a different state&apos;s plan.
+                </InfoTip>
+              </>
             ) : (
               <span className="text-red-600">Source link is missing or not a web address.</span>
             )}
@@ -294,7 +330,13 @@ function FindingCard({
 
       {finding.agent_note && (
         <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-xs font-semibold text-amber-800 uppercase mb-1">Claude&apos;s note</p>
+          <p className="text-xs font-semibold text-amber-800 uppercase mb-1">
+            Claude&apos;s note
+            <InfoTip label="Claude's note">
+              Something Claude wants you to know, such as doubts about the source or other values it saw. Read it
+              before deciding.
+            </InfoTip>
+          </p>
           <p className="text-sm text-amber-900 whitespace-pre-wrap">{finding.agent_note}</p>
         </div>
       )}
@@ -310,6 +352,15 @@ function FindingCard({
 
       {canReview && isPending && (
         <div className="mt-4 pt-4 border-t border-slate-200">
+          <p className="text-xs font-semibold text-slate-500 uppercase mb-1">
+            Note
+            <InfoTip label="Note">
+              Tell Claude what was right or wrong. Required when you reject or ask for more info; optional when
+              you approve. Your note is saved with this finding, and Claude reads the most recent notes for this
+              field the next time it researches it. Example: &ldquo;This is the commercial plan; we need the
+              Medicaid plan.&rdquo;
+            </InfoTip>
+          </p>
           <input
             type="text"
             value={note}
@@ -327,6 +378,12 @@ function FindingCard({
               />
               Also save this note as a playbook tip, so Claude always follows it for this field
             </label>
+            <InfoTip label="Save as a playbook tip">
+              Normal notes are only used while they are among the 10 most recent for this field. Tick this to
+              also save the note as a lasting instruction in the field&apos;s playbook, so Claude follows it in
+              every future run. Use it for lessons that will stay true, like &ldquo;Always use the provider
+              manual, not the member handbook.&rdquo; It is saved when you click one of the buttons below.
+            </InfoTip>
             {saveTip && (
               <div className="mt-2 ml-6 flex flex-wrap items-center gap-4">
                 <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -338,6 +395,10 @@ function FindingCard({
                   />
                   For {finding.payers?.name ?? 'this payer'} only
                 </label>
+                <InfoTip label="For this payer only">
+                  The tip is used only when Claude researches this field for {finding.payers?.name ?? 'this payer'}.
+                  Pick this for lessons about one payer&apos;s website or documents.
+                </InfoTip>
                 <label className="inline-flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
@@ -347,6 +408,10 @@ function FindingCard({
                   />
                   For all payers
                 </label>
+                <InfoTip label="For all payers">
+                  The tip is used whenever Claude researches this field, for every payer. Pick this for lessons
+                  about the field itself, such as what counts as the right answer.
+                </InfoTip>
                 <p className="w-full text-xs text-slate-500">
                   It is added under &ldquo;Watch out for&rdquo; on the{' '}
                   <Link href="/playbooks" className="text-blue-600 hover:text-blue-700 underline">
@@ -358,27 +423,48 @@ function FindingCard({
             )}
           </div>
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={approve}
-              disabled={busy || finding.status === 'not_found'}
-              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-5 py-2 rounded-lg font-semibold transition-colors"
-            >
-              Approve and publish
-            </button>
-            <button
-              onClick={() => setStatus('rejected')}
-              disabled={busy}
-              className="border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 px-5 py-2 rounded-lg font-semibold transition-colors"
-            >
-              Reject
-            </button>
-            <button
-              onClick={() => setStatus('needs_info')}
-              disabled={busy}
-              className="border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50 px-5 py-2 rounded-lg font-semibold transition-colors"
-            >
-              Needs more info
-            </button>
+            <span className="inline-flex items-center">
+              <button
+                onClick={approve}
+                disabled={busy || finding.status === 'not_found'}
+                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-5 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Approve and publish
+              </button>
+              <InfoTip label="Approve and publish">
+                Makes the value above live in the app straight away (replacing any current value) and records you
+                as the approver. Only approve when the quote supports the value. The finding moves to the Approved
+                tab.
+              </InfoTip>
+            </span>
+            <span className="inline-flex items-center">
+              <button
+                onClick={() => setStatus('rejected')}
+                disabled={busy}
+                className="border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 px-5 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Reject
+              </button>
+              <InfoTip label="Reject">
+                The value is wrong or the source isn&apos;t good enough. Nothing is published. You must write a
+                note saying why; Claude reads it next time so it avoids the same mistake. The finding moves to the
+                Rejected tab.
+              </InfoTip>
+            </span>
+            <span className="inline-flex items-center">
+              <button
+                onClick={() => setStatus('needs_info')}
+                disabled={busy}
+                className="border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50 px-5 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Needs more info
+              </button>
+              <InfoTip label="Needs more info">
+                Use this when you can&apos;t decide yet, for example the value may be right but you need to check
+                with someone or the answer is incomplete. Nothing is published. Write what is missing in the note.
+                The finding moves to the Needs info tab, where you can reopen it later.
+              </InfoTip>
+            </span>
           </div>
         </div>
       )}
@@ -391,6 +477,11 @@ function FindingCard({
         >
           Reopen as pending
         </button>
+      )}
+      {canReview && finding.status === 'needs_info' && (
+        <InfoTip label="Reopen as pending">
+          Moves this finding back to the Pending tab so you (or another reviewer) can approve or reject it.
+        </InfoTip>
       )}
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -490,6 +581,11 @@ export default function ReviewPage() {
               {t.label} ({counts(t.key)})
             </button>
           ))}
+          <InfoTip label="Tabs">
+            Pending: waiting for your decision. Needs info: put on hold to look into. Approved: published to the
+            app. Rejected: turned down, with the reason. Not found: Claude searched and couldn&apos;t find the
+            value; nothing to approve. The number is how many findings are in each tab.
+          </InfoTip>
         </div>
 
         {loading ? (
