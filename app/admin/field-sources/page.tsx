@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/app/providers'
-import { FIELD_SOURCES, FIELD_SOURCE_INFO, isFieldSource, type FieldSource } from '@/lib/research/scope'
+import { FIELD_SOURCES, FIELD_SOURCE_INFO, type FieldSource } from '@/lib/research/scope'
 
 interface Section {
   key: string
@@ -19,9 +19,9 @@ interface Field {
 }
 
 const OPTION_LABEL: Record<FieldSource, string> = {
-  internet: 'Researched by Claude (internet)',
+  internet: 'Internet',
   medicaid: 'Web if Medicaid, files if commercial',
-  file: 'From uploaded files',
+  file: 'Uploaded Files',
   hold: 'On hold',
 }
 
@@ -96,8 +96,8 @@ export default function FieldSourcesPage() {
         </Link>
         <h1 className="text-3xl font-bold text-slate-900 mt-2 mb-1">Field sources</h1>
         <p className="text-slate-600 mb-4">
-          Choose how each field gets its value. Only fields set to <strong>Researched by Claude</strong> are searched
-          on the internet. Everything else is filled from contracts or other files the team provides. Changes save
+          Choose how each field gets its value. Only fields set to <strong>Internet</strong> are searched on the web.
+          Fields set to <strong>Uploaded Files</strong> are filled from contracts or other files the team provides. Changes save
           immediately and apply to the next research run.
         </p>
         <div className="flex flex-wrap gap-2 mb-6">
@@ -119,25 +119,45 @@ export default function FieldSourcesPage() {
                 <h2 className="px-6 py-3 bg-slate-50 border-b border-slate-200 font-semibold text-slate-900">
                   {section.label}
                 </h2>
-                <ul className="divide-y divide-slate-100">
-                  {sectionFields.map(field => (
-                    <li key={field.id} className="px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-                      <span className="text-slate-800">{field.label}</span>
-                      <select
-                        value={isFieldSource(field.source_mode) ? field.source_mode : 'file'}
-                        disabled={savingId === field.id}
-                        onChange={e => change(field, e.target.value as FieldSource)}
-                        className="p-2 border border-slate-300 rounded-lg text-sm text-slate-900 disabled:opacity-50"
-                      >
-                        {FIELD_SOURCES.map(mode => (
-                          <option key={mode} value={mode}>
-                            {OPTION_LABEL[mode]}
-                          </option>
-                        ))}
-                      </select>
-                    </li>
-                  ))}
-                </ul>
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-xs font-semibold text-slate-500 border-b border-slate-100">
+                      <th className="text-left px-6 py-2 font-semibold">Field</th>
+                      <th className="px-4 py-2 w-32 text-center font-semibold">Uploaded Files</th>
+                      <th className="px-4 py-2 w-32 text-center font-semibold">Internet</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {sectionFields.map(field => {
+                      const other = field.source_mode === 'medicaid' || field.source_mode === 'hold' ? field.source_mode : null
+                      return (
+                        <tr key={field.id}>
+                          <td className="px-6 py-3 text-slate-800">
+                            {field.label}
+                            {other && (
+                              <span className={`ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-md ${FIELD_SOURCE_INFO[other].className}`}>
+                                {FIELD_SOURCE_INFO[other].label}
+                              </span>
+                            )}
+                          </td>
+                          {(['file', 'internet'] as const).map(mode => (
+                            <td key={mode} className="px-4 py-3 text-center">
+                              <input
+                                type="radio"
+                                name={`source-${field.id}`}
+                                aria-label={`${field.label}: ${mode === 'file' ? 'Uploaded Files' : 'Internet'}`}
+                                checked={field.source_mode === mode}
+                                disabled={savingId === field.id}
+                                onChange={() => change(field, mode)}
+                                className="h-4 w-4 cursor-pointer accent-blue-600"
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
             )
           })}
