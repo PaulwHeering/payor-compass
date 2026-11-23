@@ -229,6 +229,15 @@ export default function Home() {
                   )}
                 </Link>
               )}
+              {(userRole === 'manager' || userRole === 'admin') && (
+                <Link
+                  href="/playbooks"
+                  title="Standing instructions that tell Claude where to look for each field"
+                  className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Playbooks
+                </Link>
+              )}
               <Link
                 href="/payer/new"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"

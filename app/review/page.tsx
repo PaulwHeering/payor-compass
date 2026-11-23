@@ -559,6 +559,14 @@ export default function ReviewPage() {
                 Start new research
               </Link>
             )}
+            {(role === 'manager' || role === 'admin') && (
+              <>
+                {' · '}
+                <Link href="/playbooks" className="text-blue-600 hover:text-blue-700 underline">
+                  Playbooks
+                </Link>
+              </>
+            )}
           </p>
           {role && !canReview && (
             <p className="mt-3 text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-3">
