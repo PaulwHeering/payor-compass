@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../providers'
+import InfoTip from '@/app/components/InfoTip'
 
 interface Payer {
   id: string
@@ -191,6 +192,11 @@ export default function PlaybooksPage() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1" htmlFor="field">
                 Field
+                <InfoTip label="Field">
+                  The piece of payer information these instructions are about, such as timely filing limit. Pick it
+                  first; anything already saved for it loads below. Claude only researches fields set to
+                  &ldquo;Internet&rdquo; on the Field Sources page, so instructions for other fields aren&apos;t used.
+                </InfoTip>
               </label>
               <select
                 id="field"
@@ -215,6 +221,11 @@ export default function PlaybooksPage() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1" htmlFor="scope">
                 Applies to
+                <InfoTip label="Applies to">
+                  &ldquo;All payers&rdquo; means Claude uses these instructions whenever it researches this field.
+                  &ldquo;Only [payer]&rdquo; means just for that payer. Each field can have one all-payers set plus
+                  one set per payer. When Claude researches a payer, it reads both.
+                </InfoTip>
               </label>
               <select
                 id="scope"
@@ -237,7 +248,12 @@ export default function PlaybooksPage() {
               {existingId && <p className="text-sm text-slate-500">Editing saved instructions.</p>}
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Where to look</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Where to look
+                  <InfoTip label="Where to look">
+                    The document, page or section Claude should check first. Be specific, e.g. &ldquo;Provider manual, Claims chapter&rdquo;. Claude starts its search here.
+                  </InfoTip>
+                </label>
                 <textarea
                   rows={3}
                   maxLength={2000}
@@ -249,7 +265,12 @@ export default function PlaybooksPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Sources to trust or avoid</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Sources to trust or avoid
+                  <InfoTip label="Sources to trust or avoid">
+                    Which websites or documents count as reliable for this field, and which to ignore, e.g. &ldquo;Only the payer&apos;s own site; ignore billing-company blogs.&rdquo;
+                  </InfoTip>
+                </label>
                 <textarea
                   rows={2}
                   maxLength={2000}
@@ -261,7 +282,12 @@ export default function PlaybooksPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Search terms that work</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Search terms that work
+                  <InfoTip label="Search terms that work">
+                    Words or phrases that find the answer when searching, separated by commas. Payers often use their own wording, e.g. &ldquo;claim submission deadline&rdquo; instead of &ldquo;timely filing&rdquo;.
+                  </InfoTip>
+                </label>
                 <input
                   type="text"
                   maxLength={500}
@@ -273,7 +299,12 @@ export default function PlaybooksPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Watch out for</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Watch out for
+                  <InfoTip label="Watch out for">
+                    Mistakes to avoid and rules Claude must follow. Notes you save as playbook tips on the Review page are added here, one per line. Edit or delete lines that are out of date. Don&apos;t include member information.
+                  </InfoTip>
+                </label>
                 <textarea
                   rows={3}
                   maxLength={2000}
@@ -287,6 +318,10 @@ export default function PlaybooksPage() {
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">
                   How it was found before (optional)
+                  <InfoTip label="How it was found before">
+                    A short description of where the answer was found last time, so Claude can go straight there and
+                    check whether it changed.
+                  </InfoTip>
                 </label>
                 <textarea
                   rows={2}
@@ -301,21 +336,33 @@ export default function PlaybooksPage() {
 
               {canEdit && (
                 <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={save}
-                    disabled={busy}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-                  >
-                    {busy ? 'Saving…' : 'Save instructions'}
-                  </button>
-                  {existingId && (
+                  <span className="inline-flex items-center">
                     <button
-                      onClick={remove}
+                      onClick={save}
                       disabled={busy}
-                      className="border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 px-5 py-3 rounded-lg font-semibold transition-colors"
+                      className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                     >
-                      Delete
+                      {busy ? 'Saving…' : 'Save instructions'}
                     </button>
+                    <InfoTip label="Save instructions">
+                      Saves everything above for the chosen field and payer scope. Claude uses it from the next research
+                      run on. It doesn&apos;t change any published payer data.
+                    </InfoTip>
+                  </span>
+                  {existingId && (
+                    <span className="inline-flex items-center">
+                      <button
+                        onClick={remove}
+                        disabled={busy}
+                        className="border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 px-5 py-3 rounded-lg font-semibold transition-colors"
+                      >
+                        Delete
+                      </button>
+                      <InfoTip label="Delete">
+                        Removes these instructions for this field and scope. Claude will then research it without them.
+                        Published payer data isn&apos;t affected.
+                      </InfoTip>
+                    </span>
                   )}
                 </div>
               )}
@@ -328,7 +375,13 @@ export default function PlaybooksPage() {
           )}
         </div>
 
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Saved instructions</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">
+          Saved instructions
+          <InfoTip label="Saved instructions">
+            Every set of instructions saved so far, newest first, with who changed it last. Click Edit (or View) to
+            load one into the form above.
+          </InfoTip>
+        </h2>
         {playbooks.length === 0 ? (
           <p className="text-slate-500">
             None yet. As findings are approved, Claude also remembers where they were found, even without instructions.
