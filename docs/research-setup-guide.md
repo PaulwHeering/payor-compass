@@ -27,6 +27,10 @@ That's all.
 
 # Part 2: Using it
 
+## What Claude researches
+
+The Research page only lists fields that can be found on the internet. Profile details (TIN, states, contract dates, renewal/termination terms, contacts), EFT / claim form / Waystar ID / claims address, the contracting model (individual vs. company NPI), the fee schedule link, contracted codes and staff level per code, and Clinical Services are **not** researched. They will be filled from files you provide.
+
 ## Research a payer
 
 1. Make sure the payer exists. If not, add it with **+ New Payer**.

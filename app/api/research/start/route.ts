@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireReviewer } from '@/lib/supabase-server'
 import { researchConfigured } from '@/lib/research/engine'
+import { isResearchable, NOT_RESEARCHABLE_MESSAGE } from '@/lib/research/scope'
 
 const MAX_FIELDS_PER_RUN = 25
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   const [payerRes, fieldsRes, activeRes] = await Promise.all([
     supabase.from('payers').select('id, name').eq('id', payerId).single(),
-    supabase.from('field_definitions').select('id').in('id', fieldIds),
+    supabase.from('field_definitions').select('id, key, label, section_key').in('id', fieldIds),
     supabase
       .from('research_tasks')
       .select('field_id')
@@ -50,6 +51,14 @@ export async function POST(request: NextRequest) {
   if (!payerRes.data) return NextResponse.json({ error: 'That payer does not exist.' }, { status: 404 })
   if ((fieldsRes.data ?? []).length !== fieldIds.length) {
     return NextResponse.json({ error: 'One or more fields do not exist.' }, { status: 400 })
+  }
+  // Only fields marked "research on internet" may be researched (see lib/research/scope.ts).
+  const blocked = (fieldsRes.data ?? []).filter(f => !isResearchable(f.section_key, f.key))
+  if (blocked.length > 0) {
+    return NextResponse.json(
+      { error: `${NOT_RESEARCHABLE_MESSAGE} Remove: ${blocked.map(f => f.label).join(', ')}.` },
+      { status: 400 }
+    )
   }
 
   // Don't spend twice on a field that is already queued or running for this payer.

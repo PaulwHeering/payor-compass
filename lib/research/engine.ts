@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import Anthropic from '@anthropic-ai/sdk'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { extractSourceText, fetchSource, verifyQuote } from './source'
+import { isResearchable, NOT_RESEARCHABLE_MESSAGE } from './scope'
 
 // Which model does the research. Opus is the most careful; set RESEARCH_MODEL to a cheaper model
 // (for example claude-sonnet-5-5) to cut cost.
@@ -206,6 +207,8 @@ export async function runTask(supabase: SupabaseClient, taskId: string): Promise
     const payer = payerRes.data as { id: string; name: string } | null
     const field = fieldRes.data as FieldDef | null
     if (!payer || !field) return await fail('The payer or field no longer exists.')
+    // Backstop: even if a task was queued some other way, never search the web for these fields.
+    if (!isResearchable(field.section_key, field.key)) return await fail(NOT_RESEARCHABLE_MESSAGE)
     const liveValues = (liveRes.data ?? []) as { id: string; value: string; position: number }[]
 
     const [sectionRes, playbookRes, rejectionRes, approvedRes] = await Promise.all([
