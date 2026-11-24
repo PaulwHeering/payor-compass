@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import SourceBadge from '@/app/components/SourceBadge'
 import InfoTip from '@/app/components/InfoTip'
+import PayerFiles from '@/app/components/PayerFiles'
 
 interface Section {
   key: string
@@ -336,6 +337,23 @@ export default function PayerForm() {
               />
             </div>
 
+            <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-1">
+                Uploaded Files
+                <InfoTip label="Uploaded Files">
+                  Contracts and other PDFs for this payer. Fields tagged &ldquo;From uploaded files&rdquo; are filled
+                  in from these. When you open a section with those fields, the files show next to the form so you
+                  can read them while you type.
+                </InfoTip>
+              </h2>
+              <p className="text-sm text-slate-500 mb-4">PDFs used to fill in the &ldquo;From uploaded files&rdquo; fields.</p>
+              {isNew ? (
+                <p className="text-sm text-slate-400 italic">Save the payer first, then you can upload files.</p>
+              ) : (
+                <PayerFiles payerId={payerId} previewHeight="60vh" />
+              )}
+            </div>
+
             <h1 className="text-4xl font-bold text-slate-900 mb-2">
               Payer Profile — Categories & Contents
               <InfoTip label="Sections">
@@ -419,10 +437,13 @@ export default function PayerForm() {
   // Detail view: Show selected section form
   const selectedSectionData = sections.find(s => s.key === activeSection)
   const sectionFields = fields.filter(f => f.section_key === activeSection)
+  // Sections with "From uploaded files" fields show the payer's PDFs beside the form.
+  const showFiles = !isNew && sectionFields.some(f => f.source_mode === 'file')
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-4xl mx-auto p-8">
+      <div className={`${showFiles ? 'max-w-[1600px] flex flex-col xl:flex-row gap-8 items-start' : 'max-w-4xl'} mx-auto p-8`}>
+      <div className={showFiles ? 'w-full xl:w-1/2 min-w-0' : ''}>
         {/* Header */}
         <button
           onClick={() => setActiveSection(null)}
@@ -557,6 +578,20 @@ export default function PayerForm() {
             </InfoTip>
           </span>
         </div>
+      </div>
+      {showFiles && (
+        <aside className="w-full xl:w-1/2 min-w-0 xl:sticky xl:top-8 bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">
+            Uploaded Files
+            <InfoTip label="Uploaded Files" align="right">
+              The contracts and other PDFs uploaded for this payer. Use them to fill in the fields tagged
+              &ldquo;From uploaded files&rdquo;. Click a file to preview it; managers and admins can upload more here.
+            </InfoTip>
+          </h2>
+          <p className="text-sm text-slate-500 mb-4">Read these to fill in the &ldquo;From uploaded files&rdquo; fields.</p>
+          <PayerFiles payerId={payerId} layout="side" previewHeight="70vh" />
+        </aside>
+      )}
       </div>
     </main>
   )

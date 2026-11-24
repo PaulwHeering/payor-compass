@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import AuditLog from './AuditLog'
 import SourceBadge from '@/app/components/SourceBadge'
 import InfoTip from '@/app/components/InfoTip'
+import PayerFiles from '@/app/components/PayerFiles'
 
 interface Section {
   key: string
@@ -174,6 +175,19 @@ export default function PayerViewer() {
               Claude on the internet, or filled from files the team uploads.
             </InfoTip>
           </p>
+        </div>
+
+        {/* Uploaded files */}
+        <div className="bg-white rounded-lg shadow-sm p-8 mb-12">
+          <h2 className="text-xl font-bold text-slate-900 mb-1">
+            Uploaded Files
+            <InfoTip label="Uploaded Files">
+              Contracts and other PDFs uploaded for this payer. Fields tagged &ldquo;From uploaded files&rdquo; are
+              filled in from these. Click a file to preview it. Managers and admins can upload or delete files.
+            </InfoTip>
+          </h2>
+          <p className="text-sm text-slate-500 mb-4">PDFs used to fill in the &ldquo;From uploaded files&rdquo; fields.</p>
+          <PayerFiles payerId={payerId} previewHeight="70vh" />
         </div>
 
         {/* Audit Log */}
