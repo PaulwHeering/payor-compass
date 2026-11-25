@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from './providers'
 import InfoTip from '@/app/components/InfoTip'
 
 interface Payer {
@@ -32,8 +30,6 @@ interface CompletionBySection {
 }
 
 export default function Home() {
-  const router = useRouter()
-  const { user, signOut } = useAuth()
   const [payers, setPayers] = useState<Payer[]>([])
   const [sections, setSections] = useState<Section[]>([])
   const [fields, setFields] = useState<Field[]>([])
@@ -42,38 +38,6 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<string | null>(null)
   const [sortAsc, setSortAsc] = useState(true)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const [pendingFindings, setPendingFindings] = useState(0)
-
-  useEffect(() => {
-    if (userRole !== 'manager' && userRole !== 'admin') return
-    supabase
-      .from('findings')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending')
-      .then(({ count }) => setPendingFindings(count ?? 0))
-  }, [userRole])
-
-  useEffect(() => {
-    if (!user) return
-
-    const getUserRole = async () => {
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-      setUserRole(data?.role || null)
-    }
-
-    getUserRole()
-  }, [user])
-
-  const handleLogout = async () => {
-    await signOut()
-    router.push('/auth/login')
-  }
 
   let filteredPayers = payers.filter(payer =>
     payer.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -205,58 +169,10 @@ export default function Home() {
         <div className="mb-10">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-slate-900 mb-2">Payer Compass</h1>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">Payors</h1>
               <p className="text-slate-600">Manage and track insurance payer information</p>
             </div>
             <div className="flex items-center gap-4">
-              {(userRole === 'manager' || userRole === 'admin') && (
-                <span className="inline-flex items-center">
-                  <Link
-                    href="/research"
-                    className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
-                  >
-                    Research
-                  </Link>
-                  <InfoTip label="Research" align="right">
-                    Ask Claude to look up information for a payer on the internet, such as timely filing limits or
-                    prior authorization rules. Claude only proposes values; nothing changes until someone approves
-                    them on the Review page.
-                  </InfoTip>
-                </span>
-              )}
-              {(userRole === 'manager' || userRole === 'admin') && (
-                <span className="inline-flex items-center">
-                  <Link
-                    href="/review"
-                    className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
-                  >
-                    Review findings
-                    {pendingFindings > 0 && (
-                      <span className="ml-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        {pendingFindings}
-                      </span>
-                    )}
-                  </Link>
-                  <InfoTip label="Review findings" align="right">
-                    Check the values Claude found against their sources, then approve, reject or ask for more info.
-                    The blue number is how many findings are waiting for a decision.
-                  </InfoTip>
-                </span>
-              )}
-              {(userRole === 'manager' || userRole === 'admin') && (
-                <span className="inline-flex items-center">
-                  <Link
-                    href="/playbooks"
-                    className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-3 rounded-lg font-semibold transition-colors"
-                  >
-                    Playbooks
-                  </Link>
-                  <InfoTip label="Playbooks" align="right">
-                    Standing instructions that tell Claude where to look and what to watch out for when it researches
-                    each field, for all payers or for one payer.
-                  </InfoTip>
-                </span>
-              )}
               <span className="inline-flex items-center">
                 <Link
                   href="/payer/new"
@@ -269,59 +185,6 @@ export default function Home() {
                   research them with Claude afterwards.
                 </InfoTip>
               </span>
-              {user && (
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                      {user.email?.[0].toUpperCase() || 'U'}
-                    </div>
-                    <span className="text-sm font-medium text-slate-700 max-w-[120px] truncate">
-                      {user.email?.split('@')[0]}
-                    </span>
-                  </button>
-                  {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
-                      <div className="p-3 border-b border-slate-200">
-                        <p className="text-sm font-medium text-slate-900">{user.email}</p>
-                        {userRole && (
-                          <p className="text-xs text-slate-500 mt-1">Role: {userRole}</p>
-                        )}
-                      </div>
-                      {userRole === 'admin' && (
-                        <>
-                          <div className="flex items-center justify-between pr-3 border-b border-slate-200 hover:bg-slate-50">
-                            <Link href="/admin/job-titles" className="flex-1 px-4 py-2 text-sm text-slate-700">
-                              Manage Job Titles
-                            </Link>
-                            <InfoTip label="Manage Job Titles" align="right">
-                              Choose which job titles can sign in to Payor Compass and what role each one gets (for
-                              example, who can review findings).
-                            </InfoTip>
-                          </div>
-                          <div className="flex items-center justify-between pr-3 border-b border-slate-200 hover:bg-slate-50">
-                            <Link href="/admin/field-sources" className="flex-1 px-4 py-2 text-sm text-slate-700">
-                              Field Sources
-                            </Link>
-                            <InfoTip label="Field Sources" align="right">
-                              Choose, for each field, whether Claude researches it on the internet or it is filled from
-                              files the team uploads. Only &ldquo;Internet&rdquo; fields appear on the Research page.
-                            </InfoTip>
-                          </div>
-                        </>
-                      )}
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
-                      >
-                        Sign out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 

@@ -91,10 +91,7 @@ export default function FieldSourcesPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
       <div className="max-w-4xl mx-auto p-8">
-        <Link href="/" className="text-blue-600 hover:text-blue-700 text-sm font-semibold">
-          ← Back to Payor Compass
-        </Link>
-        <h1 className="text-3xl font-bold text-slate-900 mt-2 mb-1">Field sources</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-1">Field Sources</h1>
         <p className="text-slate-600 mb-4">
           Choose how each field gets its value. Only fields set to <strong>Internet</strong> are searched on the web.
           Fields set to <strong>Uploaded Files</strong> are filled from contracts or other files uploaded on each payer&apos;s page;

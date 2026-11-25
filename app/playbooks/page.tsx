@@ -239,10 +239,7 @@ export default function PlaybooksPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
       <div className="max-w-4xl mx-auto p-8">
-        <Link href="/research" className="text-blue-600 hover:text-blue-700 text-sm font-semibold">
-          ← Back to research
-        </Link>
-        <h1 className="text-3xl font-bold text-slate-900 mt-2">Teach Claude where to look</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Teach Claude where to look</h1>
         <p className="text-slate-600 mb-6">
           Write instructions for a field, like &ldquo;check the provider manual, Claims section&rdquo;. Claude reads them
           every time it researches that field. Apply them to all payers, or to just one.

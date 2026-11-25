@@ -19,7 +19,7 @@ For coworkers who research payers and fill in the Payor Compass database. You do
 There is nothing to install.
 
 1. Open the Payor Compass site and sign in with your Microsoft work account.
-2. You need a **manager** or **admin** role to start research and approve findings. Your role comes from your job title. If you can't see the **Research** and **Review findings** buttons on the home page, ask the project owner to add your job title (at `/admin/job-titles`).
+2. You need a **manager** or **admin** role to start research and approve findings. Your role comes from your job title. If you can't see **Research** and **Review Findings** in the sidebar, ask the project owner to give your job title that role (on the **Users** page, `/admin/users`).
 
 That's all.
 
@@ -35,12 +35,12 @@ Every field shows a badge saying how it gets its value, and the Research page ta
 - **From uploaded files**: Profile details (TIN, states, contract dates, renewal/termination terms, contacts), EFT / claim form / Waystar ID / claims address, the contracting model (individual vs. company NPI), the fee schedule link and similar. Claude never searches the web for these. It reads only the PDFs uploaded for that payer. Upload the contract first: open the payer, then **Uploaded Files → Upload PDF** (managers and admins). Until a payer has a file, these fields are greyed out on the Research page. Scanned PDFs with no text layer can't be read.
 - **Web if Medicaid · files if commercial** (contracted codes, staff level per code) and **On hold** (Clinical Services) are not researched.
 
-Admins can change any field under **Field Sources** in the account menu on the home page (`/admin/field-sources`).
+Admins can change any field under **Field Sources** in the sidebar (`/admin/field-sources`).
 
 ## Research a payer
 
 1. Make sure the payer exists. If not, add it with **+ New Payer**.
-2. Click **Research** on the home page.
+2. Click **Research** in the sidebar.
 3. Choose the payer. Tick the fields you want, or tick a whole section.
    - Start small: pick 3 to 5 fields the first time so you can see how it works.
    - You can choose up to 25 fields at a time.

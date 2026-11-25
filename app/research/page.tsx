@@ -248,10 +248,7 @@ export default function ResearchPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
       <div className="max-w-4xl mx-auto p-8">
-        <Link href="/" className="text-blue-600 hover:text-blue-700 text-sm font-semibold">
-          ← Back to payers
-        </Link>
-        <h1 className="text-3xl font-bold text-slate-900 mt-2">Research with Claude</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Research with Claude</h1>
         <p className="text-slate-600 mb-6">
           Pick a payer and the fields to research. Claude searches the web (or reads the payer&apos;s uploaded files),
           finds each answer with its source, and the server checks every quote against the real document. Results go
