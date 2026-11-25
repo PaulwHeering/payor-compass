@@ -36,8 +36,10 @@ order by f.section_key, f.position;
 
 **Only research fields whose `source_mode` is `internet`.** Add `f.source_mode` to the field query above
 and drop every field where it is not `internet`. For a whole section, research only those. If the user asks
-for a field set to `file`, `medicaid` or `hold`, tell them it is filled from team-provided files (or is on
-hold) and skip it. Don't search the web for it. Admins change this in the app at `/admin/field-sources`.
+for a field set to `file`, `medicaid` or `hold`, skip it and don't search the web for it. For `file`
+fields, tell them to upload the payer's contract on the payer page in the web app and research those fields
+on the app's Research page, which reads only the uploaded files. `medicaid` and `hold` fields are not
+researched. Admins change this in the app at `/admin/field-sources`.
 
 For a whole section, filter on `section_key`. If a payer doesn't exist, tell the user to add it in the
 app first. Don't create payers yourself.

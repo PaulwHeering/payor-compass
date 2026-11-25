@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireReviewer } from '@/lib/supabase-server'
 import { researchConfigured } from '@/lib/research/engine'
-import { isResearchable, NOT_RESEARCHABLE_MESSAGE } from '@/lib/research/scope'
+import { NO_FILES_MESSAGE, NOT_RESEARCHABLE_MESSAGE, researchMethod } from '@/lib/research/scope'
 
 const MAX_FIELDS_PER_RUN = 25
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   const { supabase, email } = auth
 
-  const [payerRes, fieldsRes, activeRes] = await Promise.all([
+  const [payerRes, fieldsRes, activeRes, filesRes] = await Promise.all([
     supabase.from('payers').select('id, name').eq('id', payerId).single(),
     supabase.from('field_definitions').select('id, label, source_mode').in('id', fieldIds),
     supabase
@@ -47,16 +47,25 @@ export async function POST(request: NextRequest) {
       .eq('payer_id', payerId)
       .in('field_id', fieldIds)
       .in('status', ['queued', 'running']),
+    supabase.from('payer_files').select('id', { count: 'exact', head: true }).eq('payer_id', payerId),
   ])
   if (!payerRes.data) return NextResponse.json({ error: 'That payer does not exist.' }, { status: 404 })
   if ((fieldsRes.data ?? []).length !== fieldIds.length) {
     return NextResponse.json({ error: 'One or more fields do not exist.' }, { status: 400 })
   }
-  // Only fields marked "research on internet" may be researched (see lib/research/scope.ts).
-  const blocked = (fieldsRes.data ?? []).filter(f => !isResearchable(f.source_mode))
+  // "Internet" fields are researched on the web and "Uploaded Files" fields in the payer's uploaded
+  // PDFs; nothing else is researched (see lib/research/scope.ts).
+  const blocked = (fieldsRes.data ?? []).filter(f => !researchMethod(f.source_mode))
   if (blocked.length > 0) {
     return NextResponse.json(
       { error: `${NOT_RESEARCHABLE_MESSAGE} Remove: ${blocked.map(f => f.label).join(', ')}.` },
+      { status: 400 }
+    )
+  }
+  const fileFields = (fieldsRes.data ?? []).filter(f => researchMethod(f.source_mode) === 'file')
+  if (fileFields.length > 0 && !filesRes.count) {
+    return NextResponse.json(
+      { error: `${NO_FILES_MESSAGE} Remove: ${fileFields.map(f => f.label).join(', ')}.` },
       { status: 400 }
     )
   }

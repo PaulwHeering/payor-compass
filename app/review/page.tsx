@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../providers'
 import InfoTip from '@/app/components/InfoTip'
+import { FILE_SOURCE_PREFIX } from '@/lib/research/scope'
 
 interface Finding {
   id: string
@@ -12,6 +13,7 @@ interface Finding {
   field_id: string
   proposed_value: string | null
   source_url: string | null
+  source_file_id: string | null
   source_quote: string | null
   source_type: string | null
   confidence: 'high' | 'medium' | 'low'
@@ -28,6 +30,7 @@ interface Finding {
   payers: { name: string } | null
   field_definitions: { label: string; section_key: string } | null
   replaced: { value: string } | null
+  source_file: { file_name: string; storage_path: string } | null
 }
 
 type StatusTab = Finding['status']
@@ -78,6 +81,23 @@ function FindingCard({
   const [error, setError] = useState<string | null>(null)
 
   const link = safeUrl(finding.source_url)
+  const fromFile = Boolean(finding.source_file_id) || (finding.source_url ?? '').startsWith(FILE_SOURCE_PREFIX)
+  // Uploaded files are private: make a short-lived link to preview the one the quote came from.
+  const [fileLink, setFileLink] = useState<string | null>(null)
+  const filePath = finding.source_file?.storage_path ?? null
+  useEffect(() => {
+    if (!filePath) return
+    let cancelled = false
+    supabase.storage
+      .from('payer-files')
+      .createSignedUrl(filePath, 60 * 60)
+      .then(({ data }) => {
+        if (!cancelled && data) setFileLink(data.signedUrl)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [filePath])
   const isPending = finding.status === 'pending'
   const edited = value.trim() !== (finding.proposed_value ?? '')
 
@@ -283,7 +303,32 @@ function FindingCard({
             {finding.source_quote}
           </blockquote>
           <p className="text-sm mb-1">
-            {link ? (
+            {fromFile ? (
+              finding.source_file ? (
+                <>
+                  <span className="text-slate-700">📄 Uploaded file: {finding.source_file.file_name}</span>
+                  {fileLink && (
+                    <>
+                      {' · '}
+                      <a
+                        href={fileLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-700 underline"
+                      >
+                        Open file
+                      </a>
+                    </>
+                  )}
+                  <InfoTip label="Uploaded file">
+                    This value came from a PDF uploaded on the payer&apos;s page, not from the web. Open the file to
+                    check the quote in context, for example that a later amendment hasn&apos;t changed it.
+                  </InfoTip>
+                </>
+              ) : (
+                <span className="text-red-600">The uploaded file this came from has been deleted.</span>
+              )
+            ) : link ? (
               <>
                 <a
                   href={link}
@@ -311,7 +356,7 @@ function FindingCard({
           </p>
           {finding.quote_verified === true && (
             <p className="text-sm text-green-700 mb-1">
-              ✓ The server found this quote in the downloaded document.
+              ✓ The server found this quote in the {fromFile ? 'uploaded file' : 'downloaded document'}.
               {finding.verification_note && ` ${finding.verification_note}`}
             </p>
           )}
@@ -508,7 +553,7 @@ export default function ReviewPage() {
         supabase
           .from('findings')
           .select(
-            '*, payers(name), field_definitions(label, section_key), replaced:payer_values!findings_replaces_value_id_fkey(value)'
+            '*, payers(name), field_definitions(label, section_key), replaced:payer_values!findings_replaces_value_id_fkey(value), source_file:payer_files(file_name, storage_path)'
           )
           .order('created_at', { ascending: true })
           .limit(500),

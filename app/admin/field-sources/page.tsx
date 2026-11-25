@@ -97,7 +97,8 @@ export default function FieldSourcesPage() {
         <h1 className="text-3xl font-bold text-slate-900 mt-2 mb-1">Field sources</h1>
         <p className="text-slate-600 mb-4">
           Choose how each field gets its value. Only fields set to <strong>Internet</strong> are searched on the web.
-          Fields set to <strong>Uploaded Files</strong> are filled from contracts or other files the team provides. Changes save
+          Fields set to <strong>Uploaded Files</strong> are filled from contracts or other files uploaded on each payer&apos;s page;
+          Claude can research them, but only in those files. Changes save
           immediately and apply to the next research run.
         </p>
         <div className="flex flex-wrap gap-2 mb-6">

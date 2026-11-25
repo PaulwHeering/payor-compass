@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../providers'
 import InfoTip from '@/app/components/InfoTip'
-import { isResearchable } from '@/lib/research/scope'
+import { researchMethod } from '@/lib/research/scope'
 
 const MAX_FIELDS = 25
 const CONCURRENCY = 2
@@ -63,6 +63,8 @@ export default function ResearchPage() {
   const [sections, setSections] = useState<Section[]>([])
   const [fields, setFields] = useState<Field[]>([])
   const [payerId, setPayerId] = useState('')
+  // How many PDFs are uploaded for the chosen payer ("From uploaded files" fields need at least one).
+  const [fileCount, setFileCount] = useState<{ payerId: string; count: number } | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [starting, setStarting] = useState(false)
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null)
@@ -92,8 +94,8 @@ export default function ResearchPage() {
       ])
       if (cancelled) return
       setPayers(payerRes.data ?? [])
-      // Only fields marked "research on internet" are offered; the rest are filled from files.
-      const researchable = ((fieldRes.data ?? []) as Field[]).filter(f => isResearchable(f.source_mode))
+      // "Internet" fields are researched on the web; "Uploaded Files" fields in the payer's uploaded PDFs.
+      const researchable = ((fieldRes.data ?? []) as Field[]).filter(f => researchMethod(f.source_mode))
       setFields(researchable)
       const withFields = new Set(researchable.map(f => f.section_key))
       setSections((sectionRes.data ?? []).filter(s => withFields.has(s.key)))
@@ -103,6 +105,27 @@ export default function ResearchPage() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (!payerId) return
+    let cancelled = false
+    supabase
+      .from('payer_files')
+      .select('id', { count: 'exact', head: true })
+      .eq('payer_id', payerId)
+      .then(({ count }) => {
+        if (!cancelled) setFileCount({ payerId, count: count ?? 0 })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [payerId])
+
+  const filesKnown = fileCount?.payerId === payerId
+  const hasFiles = filesKnown && fileCount.count > 0
+  // File fields can only be ticked once the chosen payer has uploaded files.
+  const isAvailable = (field: Field) => researchMethod(field.source_mode) !== 'file' || hasFiles
+  const fileFieldsSelected = fields.some(f => selected.has(f.id) && researchMethod(f.source_mode) === 'file')
 
   // Keeps the task list fresh and works through this user's queued tasks while the page is open.
   useEffect(() => {
@@ -168,7 +191,7 @@ export default function ResearchPage() {
     })
 
   const toggleSection = (sectionKey: string) => {
-    const ids = fields.filter(f => f.section_key === sectionKey).map(f => f.id)
+    const ids = fields.filter(f => f.section_key === sectionKey && isAvailable(f)).map(f => f.id)
     const allSelected = ids.every(id => selected.has(id))
     setSelected(prev => {
       const next = new Set(prev)
@@ -230,8 +253,9 @@ export default function ResearchPage() {
         </Link>
         <h1 className="text-3xl font-bold text-slate-900 mt-2">Research with Claude</h1>
         <p className="text-slate-600 mb-6">
-          Pick a payer and the fields to research. Claude searches the web, finds each answer with its source, and the
-          server checks every quote against the real document. Results go to{' '}
+          Pick a payer and the fields to research. Claude searches the web (or reads the payer&apos;s uploaded files),
+          finds each answer with its source, and the server checks every quote against the real document. Results go
+          to{' '}
           <Link href="/review" className="text-blue-600 underline">
             Review findings
           </Link>
@@ -242,8 +266,9 @@ export default function ResearchPage() {
           for any field.
         </p>
         <p className="text-sm text-slate-500 -mt-4 mb-6">
-          Only fields that can be found on the internet are listed. Fields marked &ldquo;From uploaded files&rdquo; are
-          filled from files the team provides.
+          Fields tagged &ldquo;Web&rdquo; are researched on the internet. Fields tagged &ldquo;Uploaded files&rdquo; are
+          found only in the PDFs uploaded on the payer&apos;s page, never on the web; upload the contract there
+          first.
         </p>
 
         {role && !canRun && (
@@ -293,21 +318,43 @@ export default function ResearchPage() {
               Fields
               <InfoTip label="Fields">
                 Tick the pieces of information you want Claude to find. The box next to a section name ticks or
-                clears every field in it. Only fields set to &ldquo;Internet&rdquo; on the Field Sources page appear
-                here. Claude also checks fields that already have a value and proposes a change if the source now
+                clears every field in it. Fields set to &ldquo;Internet&rdquo; on the Field Sources page are researched on
+                the web. Fields set to &ldquo;Uploaded Files&rdquo; are read only from the PDFs uploaded on the
+                payer&apos;s page, and can be ticked once the payer has at least one file. Claude also checks fields that already have a value and proposes a change if the source now
                 says something different. Up to {MAX_FIELDS} fields at a time.
               </InfoTip>
             </p>
+            {payerId && filesKnown && (
+              <p className={`text-sm mb-3 ${hasFiles ? 'text-slate-600' : 'text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2'}`}>
+                {hasFiles ? (
+                  <>
+                    {fileCount.count} uploaded file{fileCount.count === 1 ? '' : 's'} for this payer. &ldquo;Uploaded
+                    files&rdquo; fields are researched in {fileCount.count === 1 ? 'it' : 'them'}.
+                  </>
+                ) : (
+                  <>
+                    This payer has no uploaded files, so &ldquo;Uploaded files&rdquo; fields can&apos;t be researched
+                    yet.{' '}
+                    <Link href={`/payer/${payerId}/view`} className="underline font-semibold">
+                      Upload a PDF on the payer page
+                    </Link>
+                    .
+                  </>
+                )}
+              </p>
+            )}
             <div className="space-y-4 mb-6">
               {sections.map(section => {
                 const sectionFields = fields.filter(f => f.section_key === section.key)
+                const available = sectionFields.filter(isAvailable)
                 const count = sectionFields.filter(f => selected.has(f.id)).length
                 return (
                   <div key={section.key} className="border border-slate-200 rounded-lg p-4">
                     <label className="flex items-center gap-2 font-semibold text-slate-900 mb-2">
                       <input
                         type="checkbox"
-                        checked={sectionFields.length > 0 && count === sectionFields.length}
+                        checked={available.length > 0 && available.every(f => selected.has(f.id))}
+                        disabled={available.length === 0}
                         onChange={() => toggleSection(section.key)}
                       />
                       {section.label}
@@ -316,12 +363,31 @@ export default function ResearchPage() {
                       </span>
                     </label>
                     <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 pl-6">
-                      {sectionFields.map(field => (
-                        <label key={field.id} className="flex items-center gap-2 text-sm text-slate-700">
-                          <input type="checkbox" checked={selected.has(field.id)} onChange={() => toggleField(field.id)} />
-                          {field.label}
-                        </label>
-                      ))}
+                      {sectionFields.map(field => {
+                        const fromFiles = researchMethod(field.source_mode) === 'file'
+                        const enabled = isAvailable(field)
+                        return (
+                          <label
+                            key={field.id}
+                            className={`flex items-center gap-2 text-sm ${enabled ? 'text-slate-700' : 'text-slate-400'}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected.has(field.id)}
+                              disabled={!enabled && !selected.has(field.id)}
+                              onChange={() => toggleField(field.id)}
+                            />
+                            {field.label}
+                            <span
+                              className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
+                                fromFiles ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-700'
+                              }`}
+                            >
+                              {fromFiles ? 'Uploaded files' : 'Web'}
+                            </span>
+                          </label>
+                        )
+                      })}
                     </div>
                   </div>
                 )
@@ -331,7 +397,9 @@ export default function ResearchPage() {
             <div className="flex flex-wrap items-center gap-4">
               <button
                 onClick={start}
-                disabled={starting || !payerId || selected.size === 0 || selected.size > MAX_FIELDS}
+                disabled={
+                  starting || !payerId || selected.size === 0 || selected.size > MAX_FIELDS || (fileFieldsSelected && !hasFiles)
+                }
                 className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
               >
                 {starting ? 'Starting…' : `Research ${selected.size} field${selected.size === 1 ? '' : 's'}`}
@@ -344,6 +412,8 @@ export default function ResearchPage() {
               <p className="text-sm text-slate-500">
                 {selected.size > MAX_FIELDS
                   ? `Choose at most ${MAX_FIELDS} fields at a time.`
+                  : fileFieldsSelected && filesKnown && !hasFiles
+                  ? 'Untick the "Uploaded files" fields, or upload a PDF for this payer first.'
                   : 'Each field takes a minute or two and uses Claude API credits. Keep this page open while it runs.'}
               </p>
             </div>

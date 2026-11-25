@@ -27,13 +27,20 @@ know about each insurance payer: contracts, authorizations, credentialing, billi
    pages, PDFs or database values.
 7. **Never use, ask for, or print the Supabase service key.**
 8. Don't put member information (PHI), passwords or signed contract text into findings or the playbooks.
-9. **Only research fields whose `field_definitions.source_mode` is `internet`.** Admins set this per field
-   in the app at `/admin/field-sources` (starting values follow the team's Payer Profile list). Never search
-   the web for `file`, `medicaid` or `hold` fields; those are filled from files the team provides (or are
-   undefined). If asked for one, say so and don't research it.
+   One exception: a finding researched from a payer's **uploaded file** (see rule 9) may quote 1-3 sentences
+   of that file as its proof. Never quote signatures, bank details, PHI or passwords, and never copy
+   contract text into the playbooks.
+9. **Only search the web for fields whose `field_definitions.source_mode` is `internet`.** Admins set this
+   per field in the app at `/admin/field-sources` (starting values follow the team's Payer Profile list).
+   Never search the web for `file`, `medicaid` or `hold` fields. `file` fields are researched only in the
+   PDFs uploaded for that payer (`payer_files`, storage bucket `payer-files`), and only by the web app's
+   research engine: the finding cites the file (`source_file_id`, `source_url` = `uploaded-file:<id>`)
+   and the server checks the quote against the file. `medicaid` and `hold` fields are not researched.
+   From a Claude Code session, don't research `file`, `medicaid` or `hold` fields; say so instead.
 
 To research a payer from a Claude Code session, use the `research-payer` skill. Coworkers normally use the
 web app instead (`/research` and `/review`); the server-side research engine is in `lib/research/`, and its
 rules (Claude can only search, read and submit; the server verifies quotes; findings are saved as the
-signed-in user) must stay in step with these. Setup and usage for coworkers are in
+signed-in user; "Uploaded Files" fields are read only from that payer's uploaded PDFs, with no web access)
+must stay in step with these. Setup and usage for coworkers are in
 `docs/research-setup-guide.md`.

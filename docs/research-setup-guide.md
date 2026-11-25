@@ -29,7 +29,13 @@ That's all.
 
 ## What Claude researches
 
-The Research page only lists fields set to **Researched by Claude**. Every field shows a badge saying how it gets its value. By default, Profile details (TIN, states, contract dates, renewal/termination terms, contacts), EFT / claim form / Waystar ID / claims address, the contracting model (individual vs. company NPI), the fee schedule link, contracted codes and staff level per code, and Clinical Services are **not** researched. They will be filled from files you provide. Admins can change any field under **Field Sources** in the account menu on the home page (`/admin/field-sources`).
+Every field shows a badge saying how it gets its value, and the Research page tags each field **Web** or **Uploaded files**:
+
+- **Researched by Claude** (Web): Claude searches the internet.
+- **From uploaded files**: Profile details (TIN, states, contract dates, renewal/termination terms, contacts), EFT / claim form / Waystar ID / claims address, the contracting model (individual vs. company NPI), the fee schedule link and similar. Claude never searches the web for these. It reads only the PDFs uploaded for that payer. Upload the contract first: open the payer, then **Uploaded Files → Upload PDF** (managers and admins). Until a payer has a file, these fields are greyed out on the Research page. Scanned PDFs with no text layer can't be read.
+- **Web if Medicaid · files if commercial** (contracted codes, staff level per code) and **On hold** (Clinical Services) are not researched.
+
+Admins can change any field under **Field Sources** in the account menu on the home page (`/admin/field-sources`).
 
 ## Research a payer
 
@@ -78,7 +84,8 @@ Instructions take effect on the next research run. They are advice: Claude still
 - Every value needs a source and a quote. The server won't save a quote it can't find in the document.
 - Claude's value is a proposal. Check it against the source.
 - If something looks wrong, reject it. A rejection costs nothing. A bad approved value does.
-- Don't try to get Claude to research member information, or paste passwords or signed contracts into the app.
+- Don't try to get Claude to research member information, or paste passwords into the app. Upload contracts only through **Uploaded Files** on the payer page (they're stored privately and only signed-in users can open them). Findings from a file quote 1-3 sentences of it as proof.
+- **Findings from an uploaded file** show the file name and an **Open file** link instead of a web link. Check that a later amendment hasn't changed the value.
 
 ## If something goes wrong
 
