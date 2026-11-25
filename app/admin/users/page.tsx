@@ -116,7 +116,7 @@ export default function JobTitlesPage() {
       <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-600 mb-4">You do not have permission to access this page.</p>
-          <Link href="/" className="text-blue-600 hover:underline">
+          <Link href="/" className="text-navy hover:underline">
             Return to Payor Compass
           </Link>
         </div>
@@ -141,12 +141,12 @@ export default function JobTitlesPage() {
               value={newTitle}
               onChange={e => setNewTitle(e.target.value)}
               placeholder="e.g., Clinical Director"
-              className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy"
             />
             <select
               value={newRole}
               onChange={e => setNewRole(e.target.value as any)}
-              className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy"
             >
               <option value="viewer">Viewer</option>
               <option value="manager">Manager</option>
@@ -155,7 +155,7 @@ export default function JobTitlesPage() {
             <button
               onClick={handleAddJobTitle}
               disabled={saving || !newTitle.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+              className="bg-navy hover:bg-navy-hover disabled:opacity-50 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
             >
               {saving ? 'Adding...' : 'Add'}
             </button>
@@ -201,7 +201,7 @@ export default function JobTitlesPage() {
                     <td className="px-6 py-4 text-right space-x-2">
                       <button
                         onClick={() => handleToggleEnabled(jobTitle.id, jobTitle.enabled)}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-sm text-navy hover:text-navy-hover font-medium"
                       >
                         {jobTitle.enabled ? 'Disable' : 'Enable'}
                       </button>

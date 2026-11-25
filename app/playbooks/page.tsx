@@ -39,7 +39,7 @@ interface Playbook {
 const EMPTY_FORM = { where_to_look: '', authoritative_sources: '', search_terms: '', gotchas: '', how_found: '' }
 
 const inputClass =
-  'w-full p-3 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500'
+  'w-full p-3 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-navy'
 
 export default function PlaybooksPage() {
   const { user } = useAuth()
@@ -404,7 +404,7 @@ export default function PlaybooksPage() {
                     <button
                       onClick={() => save()}
                       disabled={busy}
-                      className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                      className="bg-navy hover:bg-navy-hover disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                     >
                       {busy ? 'Saving…' : 'Save instructions'}
                     </button>
@@ -523,7 +523,7 @@ export default function PlaybooksPage() {
                       selectTarget(p.field_id, p.payer_id ?? '')
                       window.scrollTo({ top: 0, behavior: 'smooth' })
                     }}
-                    className="text-sm text-blue-600 hover:text-blue-700 underline"
+                    className="text-sm text-navy hover:text-navy-hover underline"
                   >
                     {canEdit ? 'Edit' : 'View'}
                   </button>

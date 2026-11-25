@@ -285,7 +285,7 @@ function FindingCard({
               value={value}
               onChange={e => setValue(e.target.value)}
               rows={3}
-              className="w-full p-3 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
+              className="w-full p-3 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-navy mb-1"
             />
           ) : (
             <p className="text-slate-900 whitespace-pre-wrap mb-1">{finding.proposed_value}</p>
@@ -314,7 +314,7 @@ function FindingCard({
                         href={fileLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 underline"
+                        className="text-navy hover:text-navy-hover underline"
                       >
                         Open file
                       </a>
@@ -334,7 +334,7 @@ function FindingCard({
                   href={link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 underline break-all"
+                  className="text-navy hover:text-navy-hover underline break-all"
                 >
                   Open source document
                 </a>
@@ -411,7 +411,7 @@ function FindingCard({
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="Note (required to reject or ask for more info)"
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-navy mb-2"
           />
           <div className="mb-3 text-sm text-slate-700">
             <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -459,7 +459,7 @@ function FindingCard({
                 </InfoTip>
                 <p className="w-full text-xs text-slate-500">
                   It is added under &ldquo;Watch out for&rdquo; on the{' '}
-                  <Link href="/playbooks" className="text-blue-600 hover:text-blue-700 underline">
+                  <Link href="/playbooks" className="text-navy hover:text-navy-hover underline">
                     Playbooks
                   </Link>{' '}
                   page, where you can edit or remove it. Don&apos;t include member information.
@@ -597,14 +597,14 @@ export default function ReviewPage() {
           <p className="text-slate-600">
             Claude proposes values with a source and quote. Nothing goes live until you approve it.{' '}
             {(role === 'manager' || role === 'admin') && (
-              <Link href="/research" className="text-blue-600 hover:text-blue-700 underline">
+              <Link href="/research" className="text-navy hover:text-navy-hover underline">
                 Start new research
               </Link>
             )}
             {(role === 'manager' || role === 'admin') && (
               <>
                 {' · '}
-                <Link href="/playbooks" className="text-blue-600 hover:text-blue-700 underline">
+                <Link href="/playbooks" className="text-navy hover:text-navy-hover underline">
                   Playbooks
                 </Link>
               </>
@@ -624,7 +624,7 @@ export default function ReviewPage() {
               onClick={() => setTab(t.key)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                 tab === t.key
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-navy text-white'
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >

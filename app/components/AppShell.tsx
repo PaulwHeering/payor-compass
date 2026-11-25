@@ -261,7 +261,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
           title={collapsed ? name : undefined}
           aria-label={collapsed ? `${name}: account menu` : undefined}
         >
-          <span className="w-8 h-8 shrink-0 rounded-full bg-[#0C2340] ring-1 ring-white/25 text-white text-xs font-bold flex items-center justify-center">
+          <span className="w-8 h-8 shrink-0 rounded-full bg-navy ring-1 ring-white/25 text-white text-xs font-bold flex items-center justify-center">
             {initials(name)}
           </span>
           {!collapsed && (

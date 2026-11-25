@@ -191,11 +191,11 @@ export default function PayerFiles({
             value={description}
             onChange={e => setDescription(e.target.value)}
             placeholder="Description (optional), e.g. 2026 commercial contract"
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy"
           />
           <span className="inline-flex items-center">
             <label
-              className={`inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-semibold cursor-pointer transition-colors ${
+              className={`inline-block bg-navy hover:bg-navy-hover text-white text-sm px-4 py-2 rounded-lg font-semibold cursor-pointer transition-colors ${
                 uploading ? 'opacity-50 pointer-events-none' : ''
               }`}
             >
@@ -234,7 +234,7 @@ export default function PayerFiles({
             <li
               key={f.id}
               className={`flex items-start gap-2 rounded-lg border px-3 py-2 ${
-                f.id === selectedId ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:bg-slate-50'
+                f.id === selectedId ? 'border-navy bg-blue-50' : 'border-slate-200 hover:bg-slate-50'
               }`}
             >
               <button onClick={() => setSelectedId(f.id)} className="flex-1 text-left min-w-0">
@@ -270,7 +270,7 @@ export default function PayerFiles({
             href={previewUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:text-blue-700 font-semibold shrink-0"
+            className="text-xs text-navy hover:text-navy-hover font-semibold shrink-0"
           >
             Open in new tab ↗
           </a>

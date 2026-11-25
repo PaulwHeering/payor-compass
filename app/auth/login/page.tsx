@@ -175,7 +175,7 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-sm mx-4 bg-white rounded-xl border border-slate-200 shadow-[0_10px_40px_-10px_rgba(12,35,64,0.18)] px-8 py-7 text-center">
         <CompassLogo className="w-11 h-11 mx-auto mb-3" />
-        <h1 className="text-2xl font-bold text-[#0C2340] mb-1">Payor Compass</h1>
+        <h1 className="text-2xl font-bold text-navy mb-1">Payor Compass</h1>
         <p className="text-sm text-slate-600 mb-6">Sign in with your Bierman Microsoft account</p>
 
         {error && (
@@ -187,7 +187,7 @@ export default function LoginPage() {
         <button
           onClick={handleEntraLogin}
           disabled={loading}
-          className="w-full bg-[#0C2340] hover:bg-[#16325a] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+          className="w-full bg-navy hover:bg-navy-hover disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
         >
           {loading ? 'Signing in...' : 'Sign in with Microsoft'}
         </button>

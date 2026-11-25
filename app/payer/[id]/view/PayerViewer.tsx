@@ -154,7 +154,7 @@ export default function PayerViewer() {
             <span className="inline-flex items-center">
               <Link
                 href={`/payer/${payerId}`}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="bg-navy hover:bg-navy-hover text-white px-6 py-3 rounded-lg font-semibold transition-colors"
               >
                 Edit Payer
               </Link>
@@ -206,7 +206,7 @@ export default function PayerViewer() {
             return (
               <div
                 key={section.key}
-                className="bg-white rounded-lg shadow-sm border-l-4 border-blue-600 overflow-hidden"
+                className="bg-white rounded-lg shadow-sm border-l-4 border-navy overflow-hidden"
               >
                 <button
                   onClick={() => toggleSection(section.key)}
@@ -287,7 +287,7 @@ export default function PayerViewer() {
           <span className="inline-flex items-center">
             <Link
               href={`/payer/${payerId}`}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+              className="bg-navy hover:bg-navy-hover text-white px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               Edit This Payer
             </Link>

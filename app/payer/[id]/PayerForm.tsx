@@ -332,7 +332,7 @@ export default function PayerForm() {
                 type="text"
                 value={payerName}
                 onChange={e => setPayerName(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold"
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy text-lg font-semibold"
                 placeholder="e.g. Blue Cross Blue Shield"
               />
             </div>
@@ -375,10 +375,10 @@ export default function PayerForm() {
                 <button
                   key={section.key}
                   onClick={() => setActiveSection(section.key)}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all p-6 text-left hover:border-blue-500 border-2 border-transparent group"
+                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all p-6 text-left hover:border-navy border-2 border-transparent group"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <h2 className="text-xl font-bold text-slate-900 group-hover:text-blue-600">
+                    <h2 className="text-xl font-bold text-slate-900 group-hover:text-navy">
                       {section.label}
                     </h2>
                     <span className="text-sm font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">
@@ -409,7 +409,7 @@ export default function PayerForm() {
               <button
                 onClick={savePayer}
                 disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+                className="bg-navy hover:bg-navy-hover disabled:opacity-50 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
               >
                 {saving ? 'Saving...' : 'Save All Changes'}
               </button>
@@ -447,7 +447,7 @@ export default function PayerForm() {
         {/* Header */}
         <button
           onClick={() => setActiveSection(null)}
-          className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6 font-semibold"
+          className="inline-flex items-center text-navy hover:text-navy-hover mb-6 font-semibold"
         >
           ← Back to Sections
         </button>
@@ -491,7 +491,7 @@ export default function PayerForm() {
                         type={field.input_type === 'date' ? 'date' : 'text'}
                         value=""
                         onChange={e => updateFieldValue(field.id, 0, e.target.value)}
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy"
                         placeholder={`Enter ${field.label}`}
                       />
                     )}
@@ -501,7 +501,7 @@ export default function PayerForm() {
                           type={field.input_type === 'date' ? 'date' : 'text'}
                           value={fv.value}
                           onChange={e => updateFieldValue(field.id, idx, e.target.value)}
-                          className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy"
                           placeholder={`Enter ${field.label}`}
                         />
                         <button
@@ -514,7 +514,7 @@ export default function PayerForm() {
                     ))}
                     <button
                       onClick={() => addFieldValue(field.id)}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-semibold mt-2"
+                      className="text-sm text-navy hover:text-navy-hover font-semibold mt-2"
                     >
                       + Add another {field.label}
                     </button>
@@ -527,7 +527,7 @@ export default function PayerForm() {
                         : ''
                     }
                     onChange={e => updateFieldValue(field.id, 0, e.target.value)}
-                    className={`w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy ${
                       field.input_type === 'longtext' ? 'h-32' : 'h-10'
                     }`}
                     placeholder={`Enter ${field.label}`}
@@ -544,7 +544,7 @@ export default function PayerForm() {
             <button
               onClick={savePayer}
               disabled={saving}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+              className="bg-navy hover:bg-navy-hover disabled:opacity-50 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>

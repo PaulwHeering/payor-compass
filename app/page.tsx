@@ -176,7 +176,7 @@ export default function Home() {
               <span className="inline-flex items-center">
                 <Link
                   href="/payer/new"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
+                  className="bg-navy hover:bg-navy-hover text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
                 >
                   + New Payer
                 </Link>
@@ -203,7 +203,7 @@ export default function Home() {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               aria-label="Search payers by name"
-              className="w-full px-5 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+              className="w-full px-5 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent transition-all shadow-sm"
             />
             <svg className="absolute right-4 top-3.5 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -232,7 +232,7 @@ export default function Home() {
                 {payers.length === 0 && (
                   <Link
                     href="/payer/new"
-                    className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                    className="text-navy hover:text-navy-hover font-semibold transition-colors"
                   >
                     Create the first one →
                   </Link>
@@ -284,7 +284,7 @@ export default function Home() {
                           <td className="px-6 py-4 sticky left-0 bg-inherit hover:bg-blue-50 text-center">
                             <Link
                               href={`/payer/${payer.id}/view`}
-                              className="font-semibold text-slate-900 hover:text-blue-600 transition-colors cursor-pointer"
+                              className="font-semibold text-slate-900 hover:text-navy transition-colors cursor-pointer"
                             >
                               {payer.name}
                             </Link>

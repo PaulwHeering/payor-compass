@@ -253,11 +253,11 @@ export default function ResearchPage() {
           Pick a payer and the fields to research. Claude searches the web (or reads the payer&apos;s uploaded files),
           finds each answer with its source, and the server checks every quote against the real document. Results go
           to{' '}
-          <Link href="/review" className="text-blue-600 underline">
+          <Link href="/review" className="text-navy underline">
             Review findings
           </Link>
           . Nothing goes live until you approve it.{' '}
-          <Link href="/playbooks" className="text-blue-600 underline">
+          <Link href="/playbooks" className="text-navy underline">
             Teach Claude where to look
           </Link>{' '}
           for any field.
@@ -397,7 +397,7 @@ export default function ResearchPage() {
                 disabled={
                   starting || !payerId || selected.size === 0 || selected.size > MAX_FIELDS || (fileFieldsSelected && !hasFiles)
                 }
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="bg-navy hover:bg-navy-hover disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
               >
                 {starting ? 'Starting…' : `Research ${selected.size} field${selected.size === 1 ? '' : 's'}`}
               </button>
@@ -447,7 +447,7 @@ export default function ResearchPage() {
                     <div className="flex gap-3 text-sm">
                       {hasDone && (
                         <span className="inline-flex items-center">
-                          <Link href="/review" className="text-blue-600 hover:text-blue-700 font-semibold">
+                          <Link href="/review" className="text-navy hover:text-navy-hover font-semibold">
                             Review findings →
                           </Link>
                           <InfoTip label="Review findings" align="right">
@@ -481,7 +481,7 @@ export default function ResearchPage() {
                           )}
                           {task.status === 'failed' && canRun && (
                             <span className="inline-flex items-center">
-                              <button onClick={() => retryTask(task.id)} className="text-sm text-blue-600 underline">
+                              <button onClick={() => retryTask(task.id)} className="text-sm text-navy underline">
                                 Retry
                               </button>
                               <InfoTip label="Retry" align="right">

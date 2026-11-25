@@ -47,7 +47,7 @@ export default function InfoTip({
         aria-label={`What is "${label}"?`}
         aria-expanded={open}
         aria-controls={id}
-        className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-400 text-[10px] font-bold italic leading-none text-slate-500 hover:border-blue-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-400 text-[10px] font-bold italic leading-none text-slate-500 hover:border-navy hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy"
       >
         i
       </button>

@@ -147,7 +147,7 @@ export default function FieldSourcesPage() {
                                 checked={field.source_mode === mode}
                                 disabled={savingId === field.id}
                                 onChange={() => change(field, mode)}
-                                className="h-4 w-4 cursor-pointer accent-blue-600"
+                                className="h-4 w-4 cursor-pointer accent-navy"
                               />
                             </td>
                           ))}

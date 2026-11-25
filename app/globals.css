@@ -10,6 +10,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Bierman navy (Yankees navy) for buttons, links and the logo. */
+  --color-navy: #0C2340;
+  --color-navy-hover: #1d3d6b;
 }
 
 @media (prefers-color-scheme: dark) {
