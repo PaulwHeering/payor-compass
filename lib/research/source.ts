@@ -6,7 +6,7 @@ import { extractText, getDocumentProxy } from 'unpdf'
 const MAX_BYTES = 40 * 1024 * 1024
 const TIMEOUT_MS = 25_000
 const MAX_REDIRECTS = 5
-const USER_AGENT = 'Mozilla/5.0 (compatible; PayorCompassResearch/1.0)'
+const USER_AGENT = 'Mozilla/5.0 (compatible; PayerCompassResearch/1.0)'
 
 function isPrivateIp(ip: string): boolean {
   if (net.isIPv4(ip)) {

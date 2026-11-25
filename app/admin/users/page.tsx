@@ -117,7 +117,7 @@ export default function JobTitlesPage() {
         <div className="text-center">
           <p className="text-slate-600 mb-4">You do not have permission to access this page.</p>
           <Link href="/" className="text-navy hover:underline">
-            Return to Payor Compass
+            Return to Payer Compass
           </Link>
         </div>
       </main>
@@ -129,7 +129,7 @@ export default function JobTitlesPage() {
       <div className="max-w-4xl mx-auto p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Users</h1>
-          <p className="text-slate-600">Choose which job titles can sign in to Payor Compass and what role each one gets.</p>
+          <p className="text-slate-600">Choose which job titles can sign in to Payer Compass and what role each one gets.</p>
         </div>
 
         {/* Add New Job Title */}

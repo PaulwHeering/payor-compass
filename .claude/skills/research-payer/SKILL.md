@@ -1,11 +1,11 @@
 ---
 name: research-payer
-description: Research an insurance payer for the Payor Compass database and save proposed values as pending findings with sources and quotes. Use when the user asks to research, look up, find, fill in, or re-check a payer's information (timely filing, prior authorization, telehealth, credentialing, billing, links, etc.), or to update the research playbooks after a review.
+description: Research an insurance payer for the Payer Compass database and save proposed values as pending findings with sources and quotes. Use when the user asks to research, look up, find, fill in, or re-check a payer's information (timely filing, prior authorization, telehealth, credentialing, billing, links, etc.), or to update the research playbooks after a review.
 ---
 
 # Research a payer
 
-You find answers for fields in the Payor Compass database and save them as **pending findings** for a
+You find answers for fields in the Payer Compass database and save them as **pending findings** for a
 human to review. You never publish anything to the live data. Read `CLAUDE.md` rules first; they
 always apply.
 
@@ -18,7 +18,7 @@ All database access goes through the Supabase CLI against the linked project:
 
 ## 0. Confirm the target
 
-Run any read query. The output line `Target:` must say `Payor Compass (dsuzduetrcscspthnzdf)`. If it
+Run any read query. The output line `Target:` must say `Payor Compass (dsuzduetrcscspthnzdf)` (the Supabase project is still named "Payor Compass"). If it
 says anything else, stop and tell the user.
 
 ## 1. Understand the request

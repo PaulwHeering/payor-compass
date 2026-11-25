@@ -1,4 +1,4 @@
--- Payor Compass: payers + one-row-per-value design (no wide flat tables)
+-- Payer Compass: payers + one-row-per-value design (no wide flat tables)
 
 create table sections (
   key       text primary key,

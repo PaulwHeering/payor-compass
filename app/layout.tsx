@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Payor Compass",
+  title: "Payer Compass",
   description: "Insurance payer profile management",
 };
 

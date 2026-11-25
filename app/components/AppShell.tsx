@@ -22,7 +22,8 @@ import CompassLogo from './CompassLogo'
 // switches between the full sidebar and a narrow icon-only rail; the choice is remembered in this browser. The person's name at the bottom opens a
 // menu with Sign out.
 
-const STORAGE_KEY = 'payor-compass.sidebar-open'
+const STORAGE_KEY = 'payer-compass.sidebar-open'
+const OLD_STORAGE_KEY = 'payor-compass.sidebar-open' // before the rename; still read so nobody loses their setting
 
 type Role = 'viewer' | 'manager' | 'admin'
 
@@ -37,7 +38,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   {
     href: '/',
-    label: 'Payors',
+    label: 'Payers',
     icon: Building2,
     roles: ['viewer', 'manager', 'admin'],
     match: p => p === '/' || p.startsWith('/payer'),
@@ -66,7 +67,7 @@ function initials(name: string) {
 }
 
 const sidebarClass = (collapsed: boolean) =>
-  `sticky top-0 z-30 h-screen ${collapsed ? 'w-16' : 'w-60'} shrink-0 flex flex-col bg-[#1f2b45] text-slate-200 transition-[width] duration-200`
+  `sticky top-0 z-30 h-screen ${collapsed ? 'w-16' : 'w-60'} shrink-0 flex flex-col bg-navy text-slate-200 transition-[width] duration-200`
 
 // Holds the wide/narrow state and Cmd+B. The sidebar itself reads the page address (usePathname), so it sits
 // inside <Suspense>: Next.js pre-renders pages and only knows the address in the browser.
@@ -76,7 +77,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   // Remember wide/narrow per browser.
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY)
+    const saved = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(OLD_STORAGE_KEY)
     if (saved === 'false') setOpen(false) // eslint-disable-line react-hooks/set-state-in-effect -- read once after mount
   }, [])
 
@@ -179,11 +180,11 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
           collapsed ? 'flex-col items-center px-2' : 'items-start justify-between px-4'
         }`}
       >
-        <Link href="/" title={collapsed ? 'Payor Compass' : undefined} className="flex items-center gap-3 min-w-0">
+        <Link href="/" title={collapsed ? 'Payer Compass' : undefined} className="flex items-center gap-3 min-w-0">
           <CompassLogo bare className="w-8 h-8 shrink-0" />
           {!collapsed && (
             <span className="min-w-0">
-              <span className="block font-bold text-white leading-tight">Payor Compass</span>
+              <span className="block font-bold text-white leading-tight">Payer Compass</span>
               <span className="block text-xs text-slate-400 leading-tight mt-0.5">Payer Profiles &amp; Research</span>
             </span>
           )}
@@ -221,7 +222,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
               {!collapsed && <span className="flex-1">{item.label}</span>}
               {item.href === '/review' && pending > 0 && (
                 <span
-                  className={`font-bold rounded-full bg-blue-300 text-[#1f2b45] ${
+                  className={`font-bold rounded-full bg-blue-300 text-navy ${
                     collapsed ? 'absolute top-0.5 right-2.5 text-[9px] min-w-4 h-4 px-1 flex items-center justify-center' : 'text-[11px] px-2 py-0.5'
                   }`}
                 >
@@ -261,7 +262,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
           title={collapsed ? name : undefined}
           aria-label={collapsed ? `${name}: account menu` : undefined}
         >
-          <span className="w-8 h-8 shrink-0 rounded-full bg-navy ring-1 ring-white/25 text-white text-xs font-bold flex items-center justify-center">
+          <span className="w-8 h-8 shrink-0 rounded-full bg-navy-hover ring-1 ring-white/25 text-white text-xs font-bold flex items-center justify-center">
             {initials(name)}
           </span>
           {!collapsed && (

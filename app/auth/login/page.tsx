@@ -175,7 +175,7 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-sm mx-4 bg-white rounded-xl border border-slate-200 shadow-[0_10px_40px_-10px_rgba(12,35,64,0.18)] px-8 py-7 text-center">
         <CompassLogo className="w-11 h-11 mx-auto mb-3" />
-        <h1 className="text-2xl font-bold text-navy mb-1">Payor Compass</h1>
+        <h1 className="text-2xl font-bold text-navy mb-1">Payer Compass</h1>
         <p className="text-sm text-slate-600 mb-6">Sign in with your Bierman Microsoft account</p>
 
         {error && (

@@ -1,4 +1,4 @@
-// The Payor Compass mark: a white compass in a navy circle. The favicon (app/icon.svg) is the same drawing.
+// The Payer Compass mark: a white compass in a navy circle. The favicon (app/icon.svg) is the same drawing.
 // `bare` drops the circle, leaving just the white compass for dark backgrounds such as the sidebar. The
 // needle's centre dot is a cut-out (evenodd), so it shows whatever is behind it.
 export default function CompassLogo({ className = 'w-8 h-8', bare = false }: { className?: string; bare?: boolean }) {

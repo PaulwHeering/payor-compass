@@ -169,7 +169,7 @@ export default function Home() {
         <div className="mb-10">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-slate-900 mb-2">Payors</h1>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">Payers</h1>
               <p className="text-slate-600">Manage and track insurance payer information</p>
             </div>
             <div className="flex items-center gap-4">

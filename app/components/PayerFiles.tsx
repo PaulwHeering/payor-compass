@@ -214,7 +214,7 @@ export default function PayerFiles({
             </label>
             <InfoTip label="Upload PDF">
               Adds a PDF (up to 50 MB) to this payer, such as a contract or fee schedule. It is stored securely in
-              Payor Compass and anyone signed in can preview it here. Type a description first if you want one.
+              Payer Compass and anyone signed in can preview it here. Type a description first if you want one.
             </InfoTip>
           </span>
         </div>

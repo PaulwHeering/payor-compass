@@ -1,6 +1,6 @@
-# Payor Compass: Research Guide
+# Payer Compass: Research Guide
 
-For coworkers who research payers and fill in the Payor Compass database. You do everything in the web app.
+For coworkers who research payers and fill in the Payer Compass database. You do everything in the web app.
 
 ## How it works
 
@@ -18,7 +18,7 @@ For coworkers who research payers and fill in the Payor Compass database. You do
 
 There is nothing to install.
 
-1. Open the Payor Compass site and sign in with your Microsoft work account.
+1. Open the Payer Compass site and sign in with your Microsoft work account.
 2. You need a **manager** or **admin** role to start research and approve findings. Your role comes from your job title. If you can't see **Research** and **Review Findings** in the sidebar, ask the project owner to give your job title that role (on the **Users** page, `/admin/users`).
 
 That's all.
@@ -119,4 +119,4 @@ Instructions take effect on the next research run. They are advice: Claude still
 
 ## Advanced: researching from Claude Code
 
-The `research-payer` skill in `.claude/skills` does the same research from a terminal session, and is useful for testing new fields and changing the research instructions. It needs the Supabase CLI linked to the Payor Compass project. See `CLAUDE.md` for its rules.
+The `research-payer` skill in `.claude/skills` does the same research from a terminal session, and is useful for testing new fields and changing the research instructions. It needs the Supabase CLI linked to the Payer Compass project. See `CLAUDE.md` for its rules.
