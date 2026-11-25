@@ -185,112 +185,64 @@ export default function PayerForm() {
     setSaving(true)
     try {
       let currentPayerId = payerId
-      const auditLogs: any[] = []
-      const changedBy = 'paul.heering@biermanautism.com' // TODO: use actual user from auth
+      // The database records every change in the history (audit_log) itself, credited to whoever is signed
+      // in. So this save changes only what actually changed: edited values are updated, cleared or removed
+      // ones deleted, new ones added. Moving a list entry only updates its position.
 
-      // Create or update payer
       if (isNew) {
-        const { data, error } = await supabase
-          .from('payers')
-          .insert({ name: payerName.trim() })
-          .select()
-          .single()
-
+        const { data, error } = await supabase.from('payers').insert({ name: payerName.trim() }).select().single()
         if (error) throw error
         currentPayerId = data.id
-
-        // Log payer creation
-        auditLogs.push({
-          payer_id: currentPayerId,
-          old_value: null,
-          new_value: payerName.trim(),
-          changed_by: changedBy,
-          change_type: 'create',
-        })
-      } else {
-        // Log payer name change if it changed
-        if (payer && payer.name !== payerName.trim()) {
-          auditLogs.push({
-            payer_id: payerId,
-            old_value: payer.name,
-            new_value: payerName.trim(),
-            changed_by: changedBy,
-            change_type: 'update',
-          })
-        }
-
-        const { error } = await supabase
-          .from('payers')
-          .update({ name: payerName.trim() })
-          .eq('id', payerId)
-
+      } else if (payer && payer.name !== payerName.trim()) {
+        const { error } = await supabase.from('payers').update({ name: payerName.trim() }).eq('id', payerId)
         if (error) throw error
       }
 
-      // Track old values before deletion
-      let oldValues: Map<string, string> = new Map()
+      // Compare with what is saved now (not what was loaded), in case someone else changed it meanwhile.
+      const saved = new Map<string, PayerValue>()
       if (!isNew) {
-        const { data: oldData } = await supabase
-          .from('payer_values')
-          .select('*')
-          .eq('payer_id', currentPayerId)
-
-        if (oldData) {
-          oldData.forEach(v => {
-            const key = `${v.field_id}:${v.position}`
-            oldValues.set(key, v.value)
-          })
-        }
-
-        // Delete existing values
-        const { error } = await supabase
-          .from('payer_values')
-          .delete()
-          .eq('payer_id', currentPayerId)
+        const { data, error } = await supabase.from('payer_values').select('*').eq('payer_id', currentPayerId)
         if (error) throw error
+        data?.forEach(v => saved.set(v.id, v))
       }
 
-      // Insert new values and log changes
-      const valuesToInsert: any[] = []
+      const toInsert: { payer_id: string; field_id: string; value: string; position: number }[] = []
+      const toUpdate: { id: string; changes: { value?: string; position?: number } }[] = []
+      const keep = new Set<string>()
       values.forEach((vals, fieldId) => {
-        vals.forEach((v, idx) => {
-          if (v.value.trim()) {
-            valuesToInsert.push({
-              payer_id: currentPayerId,
-              field_id: fieldId,
-              value: v.value.trim(),
-              position: idx,
-            })
-
-            // Log field value changes
-            const oldKey = `${fieldId}:${idx}`
-            const oldValue = oldValues.get(oldKey)
-            if (oldValue !== v.value.trim()) {
-              auditLogs.push({
-                payer_id: currentPayerId,
-                field_id: fieldId,
-                old_value: oldValue || null,
-                new_value: v.value.trim(),
-                changed_by: changedBy,
-                change_type: !isNew ? 'update' : 'create',
-              })
-            }
+        let position = 0
+        vals.forEach(v => {
+          const value = v.value.trim()
+          if (!value) return // cleared: deleted below if it was saved
+          const existing = saved.get(v.id)
+          if (existing) {
+            keep.add(v.id)
+            const changes: { value?: string; position?: number } = {}
+            if (existing.value !== value) changes.value = value
+            if (existing.position !== position) changes.position = position
+            if (Object.keys(changes).length) toUpdate.push({ id: v.id, changes })
+          } else {
+            toInsert.push({ payer_id: currentPayerId, field_id: fieldId, value, position })
           }
+          position++
         })
       })
+      const toDelete = [...saved.keys()].filter(id => !keep.has(id))
 
-      if (valuesToInsert.length > 0) {
-        const { error } = await supabase.from('payer_values').insert(valuesToInsert)
+      if (toDelete.length) {
+        const { error } = await supabase.from('payer_values').delete().in('id', toDelete)
         if (error) throw error
       }
-
-      // Insert audit logs
-      if (auditLogs.length > 0) {
-        const { error } = await supabase.from('audit_log').insert(auditLogs)
-        if (error) {
-          console.error('Error inserting audit logs:', error)
-          // Don't fail the save if audit logging fails
-        }
+      for (const { id, changes } of toUpdate) {
+        const { error } = await supabase
+          .from('payer_values')
+          .update({ ...changes, updated_at: new Date().toISOString() })
+          .eq('id', id)
+        if (error) throw error
+      }
+      if (toInsert.length) {
+        const { error } = await supabase.from('payer_values').insert(toInsert)
+        if (error) throw error
       }
 
       router.push('/')

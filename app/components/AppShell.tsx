@@ -7,6 +7,7 @@ import {
   BookOpen,
   Building2,
   ClipboardCheck,
+  History,
   LogOut,
   PanelLeft,
   Search,
@@ -46,6 +47,13 @@ const NAV: NavItem[] = [
   { href: '/research', label: 'Research', icon: Search, roles: ['manager', 'admin'], match: p => p.startsWith('/research') },
   { href: '/review', label: 'Review Findings', icon: ClipboardCheck, roles: ['manager', 'admin'], match: p => p.startsWith('/review') },
   { href: '/playbooks', label: 'Playbooks', icon: BookOpen, roles: ['manager', 'admin'], match: p => p.startsWith('/playbooks') },
+  {
+    href: '/history',
+    label: 'History',
+    icon: History,
+    roles: ['viewer', 'manager', 'admin'],
+    match: p => p.startsWith('/history'),
+  },
   { href: '/admin/users', label: 'Users', icon: Users, roles: ['admin'], match: p => p.startsWith('/admin/users') },
   {
     href: '/admin/field-sources',

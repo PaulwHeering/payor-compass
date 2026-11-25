@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import InfoTip from '@/app/components/InfoTip'
 
@@ -13,6 +14,27 @@ interface AuditEntry {
   changed_by: string
   changed_at: string
   change_type: string
+  table_name: string
+  column_name: string | null
+  item: string | null
+  note: string | null
+}
+
+const TYPE_STYLE: Record<string, string> = {
+  create: 'bg-green-100 text-green-800',
+  update: 'bg-blue-100 text-blue-800',
+  delete: 'bg-red-100 text-red-800',
+}
+const TYPE_LABEL: Record<string, string> = { create: 'Added', update: 'Changed', delete: 'Removed' }
+
+// What the entry is about, e.g. "Timely filing limit", "Payer name", "Uploaded file", "Finding: Timely filing limit".
+function title(entry: AuditEntry, fields: Map<string, string>) {
+  const field = entry.field_id ? fields.get(entry.field_id) : undefined
+  if (entry.table_name === 'payer_values') return field ?? entry.item ?? 'Unknown field'
+  if (entry.table_name === 'payers') return entry.item ?? 'Payer'
+  const what = entry.item ?? entry.table_name
+  const col = entry.column_name && entry.table_name !== 'payer_files' ? ` (${entry.column_name.replace(/_/g, ' ')})` : ''
+  return field ? `${what}${col}: ${field}` : `${what}${col}`
 }
 
 interface Field {
@@ -85,7 +107,8 @@ export default function AuditLog({ payerId }: { payerId: string }) {
         <span className="pr-6">
           <InfoTip label="Change History" align="right">
             Every change made to this payer&apos;s information, newest first: which field, who changed it, when,
-            and the value before and after. Values approved on the Review page appear here too. Click the heading
+            and the value before and after. Values approved on the Review page, uploaded files and review
+            decisions appear here too. The database records these itself. Click the heading
             to show or hide the list.
           </InfoTip>
         </span>
@@ -93,19 +116,27 @@ export default function AuditLog({ payerId }: { payerId: string }) {
 
       {expanded && (
         <div className="px-6 pb-6 border-t border-slate-200">
+          <p className="text-right pt-3 pb-1">
+            <Link href={`/history?payer=${payerId}`} className="text-sm text-navy hover:text-navy-hover font-medium">
+              Search all changes in History →
+            </Link>
+          </p>
           <div className="space-y-4 max-h-96 overflow-y-auto">
             {entries.map(entry => (
               <div key={entry.id} className="pb-4 border-b border-slate-100 last:border-0">
                 <div className="flex items-start justify-between mb-2">
                   <p className="text-sm font-semibold text-slate-900">
-                    {entry.field_id ? fields.get(entry.field_id) || 'Unknown Field' : 'Payer Name'}
+                    {title(entry, fields)}
                   </p>
-                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
-                    {entry.change_type}
+                  <span
+                    className={`text-xs font-semibold px-2 py-1 rounded ${TYPE_STYLE[entry.change_type] ?? 'bg-slate-100 text-slate-600'}`}
+                  >
+                    {TYPE_LABEL[entry.change_type] ?? entry.change_type}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mb-2">
                   {new Date(entry.changed_at).toLocaleString()} by {entry.changed_by}
+                  {entry.note && <span className="italic"> · {entry.note}</span>}
                 </p>
                 <div className="bg-slate-50 rounded p-3 space-y-2">
                   {entry.old_value && (
