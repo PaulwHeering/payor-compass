@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -122,17 +122,14 @@ function initials(name: string) {
   return ((parts[0]?.[0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() || '?'
 }
 
-export default function AppShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { user, signOut } = useAuth()
-  const [open, setOpen] = useState(true)
-  const [role, setRole] = useState<Role | null>(null)
-  const [pending, setPending] = useState(0)
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+const SIDEBAR_CLASS =
+  'sticky top-0 h-screen w-60 shrink-0 flex flex-col bg-gradient-to-b from-blue-50 via-white to-slate-50 border-r border-slate-200'
 
-  const hidden = pathname.startsWith('/auth') || !user
+// Holds the open/closed state and Cmd+B. The sidebar itself reads the page address (usePathname), so it sits
+// inside <Suspense>: Next.js pre-renders pages and only knows the address in the browser.
+export default function AppShell({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
+  const [open, setOpen] = useState(true)
 
   // Remember open/closed per browser.
   useEffect(() => {
@@ -153,6 +150,45 @@ export default function AppShell({ children }: { children: ReactNode }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // No sidebar until someone is signed in (the login page never has one).
+  if (!user) return <>{children}</>
+
+  const toggle = () =>
+    setOpen(prev => {
+      window.localStorage.setItem(STORAGE_KEY, String(!prev))
+      return !prev
+    })
+
+  return (
+    <div className="flex min-h-screen">
+      {open ? (
+        <Suspense fallback={<aside className={SIDEBAR_CLASS} />}>
+          <Sidebar onClose={toggle} />
+        </Suspense>
+      ) : (
+        <button
+          onClick={toggle}
+          title="Open sidebar (⌘B)"
+          aria-label="Open sidebar"
+          className="fixed top-3 left-3 z-40 p-2 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-600 hover:text-slate-900"
+        >
+          <Icon name="panel" className="w-4 h-4" />
+        </button>
+      )}
+      <div className="flex-1 min-w-0 flex flex-col">{children}</div>
+    </div>
+  )
+}
+
+function Sidebar({ onClose }: { onClose: () => void }) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const { user, signOut } = useAuth()
+  const [role, setRole] = useState<Role | null>(null)
+  const [pending, setPending] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!user) return
@@ -200,28 +236,19 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }
   }, [menuOpen])
 
-  if (hidden) return <>{children}</>
-
-  const toggle = () =>
-    setOpen(prev => {
-      window.localStorage.setItem(STORAGE_KEY, String(!prev))
-      return !prev
-    })
-
+  if (!user) return null
   const name = displayName(user.user_metadata, user.email)
   const items = NAV.filter(item => role && item.roles.includes(role))
 
   return (
-    <div className="flex min-h-screen">
-      {open ? (
-        <aside className="sticky top-0 h-screen w-60 shrink-0 flex flex-col bg-gradient-to-b from-blue-50 via-white to-slate-50 border-r border-slate-200">
+        <aside className={SIDEBAR_CLASS}>
           <div className="flex items-center justify-between px-4 py-4">
             <Link href="/" className="flex items-center gap-2.5">
               <CompassLogo className="w-8 h-8" />
               <span className="font-bold text-slate-900">Payor Compass</span>
             </Link>
             <button
-              onClick={toggle}
+              onClick={onClose}
               title="Close sidebar (⌘B)"
               aria-label="Close sidebar"
               className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100"
@@ -290,17 +317,5 @@ export default function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </aside>
-      ) : (
-        <button
-          onClick={toggle}
-          title="Open sidebar (⌘B)"
-          aria-label="Open sidebar"
-          className="fixed top-3 left-3 z-40 p-2 rounded-lg bg-white border border-slate-200 shadow-sm text-slate-600 hover:text-slate-900"
-        >
-          <Icon name="panel" className="w-4 h-4" />
-        </button>
-      )}
-      <div className="flex-1 min-w-0 flex flex-col">{children}</div>
-    </div>
   )
 }
