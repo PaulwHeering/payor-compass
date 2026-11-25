@@ -19,7 +19,7 @@ import { useAuth } from '@/app/providers'
 import CompassLogo from './CompassLogo'
 
 // The dark left sidebar shown on every signed-in page (same look as Sidelines). Cmd+B (Ctrl+B on Windows)
-// opens and closes it; the choice is remembered in this browser. The person's name at the bottom opens a
+// switches between the full sidebar and a narrow icon-only rail; the choice is remembered in this browser. The person's name at the bottom opens a
 // menu with Sign out.
 
 const STORAGE_KEY = 'payor-compass.sidebar-open'
@@ -65,15 +65,16 @@ function initials(name: string) {
   return ((parts[0]?.[0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() || '?'
 }
 
-const SIDEBAR_CLASS = 'sticky top-0 h-screen w-60 shrink-0 flex flex-col bg-[#1f2b45] text-slate-200'
+const sidebarClass = (collapsed: boolean) =>
+  `sticky top-0 z-30 h-screen ${collapsed ? 'w-16' : 'w-60'} shrink-0 flex flex-col bg-[#1f2b45] text-slate-200 transition-[width] duration-200`
 
-// Holds the open/closed state and Cmd+B. The sidebar itself reads the page address (usePathname), so it sits
+// Holds the wide/narrow state and Cmd+B. The sidebar itself reads the page address (usePathname), so it sits
 // inside <Suspense>: Next.js pre-renders pages and only knows the address in the browser.
 export default function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [open, setOpen] = useState(true)
 
-  // Remember open/closed per browser.
+  // Remember wide/narrow per browser.
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY)
     if (saved === 'false') setOpen(false) // eslint-disable-line react-hooks/set-state-in-effect -- read once after mount
@@ -104,26 +105,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      {open ? (
-        <Suspense fallback={<aside className={SIDEBAR_CLASS} />}>
-          <Sidebar onClose={toggle} />
-        </Suspense>
-      ) : (
-        <button
-          onClick={toggle}
-          title="Open sidebar (⌘B)"
-          aria-label="Open sidebar"
-          className="fixed top-3 left-3 z-40 p-2 rounded-lg bg-[#1f2b45] text-slate-200 shadow-md hover:bg-[#2a3753]"
-        >
-          <PanelLeft className="w-4 h-4" />
-        </button>
-      )}
+      <Suspense fallback={<aside className={sidebarClass(!open)} />}>
+        <Sidebar collapsed={!open} onToggle={toggle} />
+      </Suspense>
       <div className="flex-1 min-w-0 flex flex-col">{children}</div>
     </div>
   )
 }
 
-function Sidebar({ onClose }: { onClose: () => void }) {
+function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, signOut } = useAuth()
@@ -183,19 +173,25 @@ function Sidebar({ onClose }: { onClose: () => void }) {
   const items = NAV.filter(item => role && item.roles.includes(role))
 
   return (
-    <aside className={SIDEBAR_CLASS}>
-      <div className="flex items-start justify-between gap-2 px-4 py-4 border-b border-white/10">
-        <Link href="/" className="flex items-center gap-3 min-w-0">
-          <CompassLogo className="w-9 h-9 shrink-0 rounded-full ring-1 ring-white/25" />
-          <span className="min-w-0">
-            <span className="block font-bold text-white leading-tight">Payor Compass</span>
-            <span className="block text-xs text-slate-400 leading-tight mt-0.5">Payer Profiles &amp; Research</span>
-          </span>
+    <aside className={sidebarClass(collapsed)}>
+      <div
+        className={`flex gap-2 py-4 border-b border-white/10 ${
+          collapsed ? 'flex-col items-center px-2' : 'items-start justify-between px-4'
+        }`}
+      >
+        <Link href="/" title={collapsed ? 'Payor Compass' : undefined} className="flex items-center gap-3 min-w-0">
+          <CompassLogo bare className="w-8 h-8 shrink-0" />
+          {!collapsed && (
+            <span className="min-w-0">
+              <span className="block font-bold text-white leading-tight">Payor Compass</span>
+              <span className="block text-xs text-slate-400 leading-tight mt-0.5">Payer Profiles &amp; Research</span>
+            </span>
+          )}
         </Link>
         <button
-          onClick={onClose}
-          title="Close sidebar (⌘B)"
-          aria-label="Close sidebar"
+          onClick={onToggle}
+          title={collapsed ? 'Expand sidebar (⌘B)' : 'Collapse sidebar (⌘B)'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           className="p-1 mt-0.5 rounded-md text-slate-400 hover:text-white hover:bg-white/10"
         >
           <PanelLeft className="w-4 h-4" />
@@ -211,25 +207,35 @@ function Sidebar({ onClose }: { onClose: () => void }) {
               key={item.href}
               href={item.href}
               aria-current={active ? 'page' : undefined}
-              className={`flex items-center gap-3 px-4 py-2 text-sm border-l-[3px] transition-colors ${
+              title={collapsed ? item.label : undefined}
+              aria-label={collapsed ? item.label : undefined}
+              className={`relative flex items-center gap-3 py-2 text-sm border-l-[3px] transition-colors ${
+                collapsed ? 'justify-center px-0' : 'px-4'
+              } ${
                 active
                   ? 'border-blue-300 bg-white/10 text-white font-semibold'
                   : 'border-transparent text-slate-300 hover:bg-white/5 hover:text-white'
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-              <span className="flex-1">{item.label}</span>
+              <Icon className={`${collapsed ? 'w-5 h-5' : 'w-4 h-4'} shrink-0`} strokeWidth={1.75} />
+              {!collapsed && <span className="flex-1">{item.label}</span>}
               {item.href === '/review' && pending > 0 && (
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-300 text-[#1f2b45]">{pending}</span>
+                <span
+                  className={`font-bold rounded-full bg-blue-300 text-[#1f2b45] ${
+                    collapsed ? 'absolute top-0.5 right-2.5 text-[9px] min-w-4 h-4 px-1 flex items-center justify-center' : 'text-[11px] px-2 py-0.5'
+                  }`}
+                >
+                  {pending}
+                </span>
               )}
             </Link>
           )
         })}
       </nav>
 
-      <div ref={menuRef} className="relative border-t border-white/10 p-3">
+      <div ref={menuRef} className={`relative border-t border-white/10 ${collapsed ? 'p-2' : 'p-3'}`}>
         {menuOpen && (
-          <div className="absolute bottom-full left-3 right-3 mb-2 bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden text-slate-900">
+          <div className="absolute bottom-full left-2 w-56 mb-2 z-50 bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden text-slate-900">
             <div className="px-3 py-2 border-b border-slate-200">
               <p className="text-sm font-medium truncate">{user.email}</p>
               {role && <p className="text-xs text-slate-500 mt-0.5">Role: {role}</p>}
@@ -248,16 +254,22 @@ function Sidebar({ onClose }: { onClose: () => void }) {
         )}
         <button
           onClick={() => setMenuOpen(o => !o)}
-          className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/10 text-left"
+          className={`w-full flex items-center gap-3 py-2 rounded-lg hover:bg-white/10 text-left ${
+            collapsed ? 'justify-center px-0' : 'px-2'
+          }`}
           aria-expanded={menuOpen}
+          title={collapsed ? name : undefined}
+          aria-label={collapsed ? `${name}: account menu` : undefined}
         >
           <span className="w-8 h-8 shrink-0 rounded-full bg-[#0C2340] ring-1 ring-white/25 text-white text-xs font-bold flex items-center justify-center">
             {initials(name)}
           </span>
-          <span className="min-w-0">
-            <span className="block text-sm font-medium text-white truncate">{name}</span>
-            <span className="block text-xs text-slate-400 truncate">{user.email}</span>
-          </span>
+          {!collapsed && (
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-white truncate">{name}</span>
+              <span className="block text-xs text-slate-400 truncate">{user.email}</span>
+            </span>
+          )}
         </button>
       </div>
     </aside>
