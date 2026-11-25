@@ -24,3 +24,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Login page: background glyphs wander slowly, each along its own path (set per glyph in the page). */
+@keyframes login-float {
+  0%, 100% { translate: 0 0; rotate: var(--rotate); }
+  25% { translate: calc(var(--dx) * 0.6) calc(var(--dy) * -0.4); }
+  50% { translate: var(--dx) var(--dy); rotate: calc(var(--rotate) + var(--turn)); }
+  75% { translate: calc(var(--dx) * -0.3) calc(var(--dy) * 0.7); }
+}
+.login-glyph {
+  rotate: var(--rotate);
+  animation: login-float 24s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-glyph { animation: none; }
+}
